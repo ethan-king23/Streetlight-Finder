@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Streetlights">
+<meta name="theme-color" content="#14161a">
+<title>Streetlight Tracker</title>
+<style>
+/* Streetlight Tracker: night-driving tool. Dark panels always (used in the car at night).
+   Sodium-lamp amber for outage pins and the main button, green for roads covered. */
+:root{color-scheme:dark;--bg:#14161a;--panel:#1c1f24;--line:#2c3038;--ink:#f3f1ea;--mute:#a2a8b0;--amber:#ffb020;--amberInk:#231600;--green:#22c55e;--red:#ef4444;
+--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+button,input,a.btn{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#map{position:fixed;inset:0;background:#1d2026}
+.top{position:fixed;left:0;right:0;top:0;padding:calc(var(--st) + 10px) 12px 10px;display:flex;gap:10px;align-items:center;z-index:5;pointer-events:none}
+.top>*{pointer-events:auto}
+.seg{flex:1;display:flex;background:rgba(20,22,26,.92);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.seg button{flex:1;min-height:42px;border-radius:10px;font-weight:600;color:var(--mute)}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.icon{width:52px;height:52px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.icon svg{width:24px;height:24px}
+#recenter{position:fixed;right:12px;z-index:5;display:none}
+body.drive #recenter{bottom:calc(var(--sb) + 196px)}
+body.report #recenter{bottom:calc(55vh + 12px)}
+#recenter.show{display:grid}
+.panel{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 14px calc(var(--sb) + 14px);box-shadow:0 -8px 30px rgba(0,0,0,.4)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stats div{display:flex;flex-direction:column;align-items:center}
+.stats b{font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.stats span{font-size:13px;color:var(--mute)}
+.driveRow{display:flex;gap:12px;align-items:stretch}
+.track{flex:1;min-height:96px;border-radius:18px;background:#262a31;border:2px solid var(--green);color:var(--green);font-weight:700;font-size:18px}
+.track.on{background:var(--green);color:#04210e}
+.pinbtn{flex:1.2;min-height:96px;border-radius:18px;background:var(--amber);color:var(--amberInk);font-weight:800;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 0 0 0 rgba(255,176,32,.6)}
+.pinbtn svg{width:30px;height:30px}
+.pinbtn.flash{animation:flash .6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,176,32,.7);transform:scale(.96)}100%{box-shadow:0 0 0 22px rgba(255,176,32,0);transform:scale(1)}}
+.sheet{height:55vh;display:flex;flex-direction:column;padding-bottom:0}
+.sheetHead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.filters{display:flex;gap:6px;flex:1 1 auto}
+.chip{min-height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--line);color:var(--mute);font-size:15px;white-space:nowrap}
+.chip.on{border-color:var(--amber);color:var(--amber)}
+.small{min-height:40px;padding:0 12px;border-radius:10px;background:#2a2e36;font-size:15px;font-weight:600;white-space:nowrap}
+#list{list-style:none;margin:0;padding:0 0 calc(var(--sb) + 14px);overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.item{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:14px 2px;border-bottom:1px solid var(--line)}
+.item.hl{background:rgba(255,176,32,.08)}
+.num{width:40px;height:40px;border-radius:50%;background:var(--amber);color:var(--amberInk);font-weight:800;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.item.done .num{background:#4a4f58;color:#d6d9de}
+.addr{font-weight:600;cursor:pointer}
+.addr.pending{color:var(--mute);font-weight:400}
+.meta{font-size:13px;color:var(--mute);margin-top:2px}
+.note{width:100%;margin-top:8px;min-height:44px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:#14161a;font-size:16px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.acts .btn,.acts button{min-height:44px;padding:0 12px;border-radius:10px;background:#2a2e36;font-size:15px;font-weight:600;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.acts .gm{background:#1a73e8;color:#fff}
+.acts .del{color:#ff9b9b}
+.empty{color:var(--mute);text-align:center;padding:28px 12px}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.modal[hidden]{display:none}
+.card{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--panel);border-radius:20px 20px 0 0;padding:20px 18px calc(var(--sb) + 20px)}
+.card h2{margin:0 0 4px;font-size:22px}
+.card p{margin:6px 0 12px;color:var(--mute);font-size:15px}
+.card label{display:block;font-weight:600;margin:16px 0 6px}
+.card input[type=text]{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#14161a;font-size:16px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.primary{min-height:48px;padding:0 18px;border-radius:12px;background:var(--amber);color:var(--amberInk);font-weight:700}
+.ghost{min-height:48px;padding:0 16px;border-radius:12px;background:#2a2e36;font-weight:600}
+.danger{min-height:48px;padding:0 16px;border-radius:12px;background:#3a2226;color:#ffb4b4;font-weight:600}
+.check{display:flex!important;gap:10px;align-items:center;font-weight:500!important}
+.check input{width:22px;height:22px;accent-color:var(--green)}
+.hr{height:1px;background:var(--line);margin:20px 0 4px}
+#toast{position:fixed;left:50%;top:calc(var(--st) + 80px);transform:translateX(-50%);z-index:30;background:#f3f1ea;color:#14161a;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+.me{width:20px;height:20px;border-radius:50%;background:#4f9dff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(79,157,255,.25)}
+.pin{position:relative;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--amber);border:2px solid #7a4d00;display:grid;place-items:center;margin-bottom:6px}
+.pin span{transform:rotate(45deg);font:800 13px/1 -apple-system,sans-serif;color:var(--amberInk)}
+.pin.done{background:#7b818b;border-color:#3d4148}.pin.done span{color:#fff}
+.pin.sel{outline:3px solid #fff}
+@media(prefers-reduced-motion:reduce){.pinbtn.flash{animation:none}#toast{transition:none}}
+</style>
+</head>
+<body class="drive">
+<div id="map"></div>
+
+<header class="top">
+  <div class="seg" role="tablist" aria-label="Mode">
+    <button id="tabDrive" class="on" role="tab">Driving</button>
+    <button id="tabReport" role="tab">Reporting</button>
+  </div>
+  <button id="gear" class="icon" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</header>
+
+<button id="recenter" class="icon" aria-label="Follow my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+
+<section id="drivePanel" class="panel">
+  <div class="stats">
+    <div><b id="miles">0.0</b><span>miles covered</span></div>
+    <div><b id="openCount">0</b><span>lights out</span></div>
+    <div><b id="gps">...</b><span>GPS</span></div>
+  </div>
+  <div class="driveRow">
+    <button id="trackBtn" class="track">Start tracking</button>
+    <button id="pinBtn" class="pinbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out</button>
+  </div>
+</section>
+
+<section id="reportPanel" class="panel sheet" hidden>
+  <div class="sheetHead">
+    <div class="filters">
+      <button class="chip on" data-f="open">Open <span id="cOpen">0</span></button>
+      <button class="chip" data-f="done">Reported <span id="cDone">0</span></button>
+      <button class="chip" data-f="all">All</button>
+    </div>
+    <button id="placeBtn" class="small">Add on map</button>
+    <button id="copyAll" class="small">Copy list</button>
+  </div>
+  <ul id="list"></ul>
+</section>
+
+<div id="settings" class="modal" hidden>
+  <div class="card">
+    <h2>Settings</h2>
+    <p id="setupMsg" hidden>To show Google Maps, paste a Google Maps API key below. It is saved only on this phone.</p>
+    <label for="keyIn">Google Maps API key</label>
+    <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza...">
+    <p>Enable Maps JavaScript API and Geocoding API on the key. Roads API is only needed for snap to roads.</p>
+    <div class="row"><button id="saveKey" class="primary">Save key and reload</button></div>
+    <label class="check"><input id="snapIn" type="checkbox"> Snap driven path to roads (Roads API)</label>
+    <p>Off: the green line follows raw GPS. On: it is matched to the road you drove, which looks cleaner.</p>
+    <div class="hr"></div>
+    <label>Backup</label>
+    <p>Data lives in this browser only. Export now and then so nothing is lost.</p>
+    <div class="row">
+      <button id="expJson" class="ghost">Export backup</button>
+      <button id="expCsv" class="ghost">Export pins (CSV)</button>
+      <button id="impBtn" class="ghost">Import backup</button>
+      <input id="impFile" type="file" accept="application/json,.json" hidden>
+    </div>
+    <div class="hr"></div>
+    <label>Clear data</label>
+    <div class="row">
+      <button id="clrTrack" class="danger">Clear driven roads</button>
+      <button id="clrPins" class="danger">Delete all pins</button>
+    </div>
+    <div class="row" style="margin-top:22px"><button id="closeSet" class="ghost" style="width:100%">Done</button></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+const LS = 'slt.data.v1', LSK = 'slt.key', LSSNAP = 'slt.snap', LSMODE = 'slt.mode', LSVIEW = 'slt.view', LSTRK = 'slt.tracking';
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } }
+};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r6 = n => Math.round(n * 1e6) / 1e6;
+const toRad = d => d * Math.PI / 180;
+function dist(a, b){ // meters, a/b have lat,lng
+  const R = 6371000, dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const P = a => ({lat: a[0], lng: a[1]});
+
+// ---------- data ----------
+let data = {segs: [], pins: [], nextN: 1};
+function validData(d){ return d && Array.isArray(d.segs) && Array.isArray(d.pins); }
+try { const d = JSON.parse(store.get(LS) || 'null'); if (validData(d)) data = d; } catch(e){}
+if (!data.nextN) data.nextN = data.pins.reduce((m,p) => Math.max(m, p.n || 0), 0) + 1;
+let saveTimer = null, warnedSave = false;
+function save(now){
+  clearTimeout(saveTimer);
+  const w = () => { if (!store.set(LS, JSON.stringify(data)) && !warnedSave){ warnedSave = true; toast('Could not save. Export a backup from Settings.'); } };
+  if (now) w(); else saveTimer = setTimeout(w, 1500);
+}
+function segLen(raw){ let m = 0; for (let i = 1; i < raw.length; i++) m += dist(P(raw[i-1]), P(raw[i])); return m; }
+let meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0);
+
+// ---------- ui helpers ----------
+let toastT;
+function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms || 2600); }
+function armed(btn, label, fn){ // two-tap confirm
+  if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; fn(); return; }
+  btn.dataset.armed = '1'; btn.textContent = 'Tap again to confirm';
+  setTimeout(() => { if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; } }, 3500);
+}
+function updateStats(){
+  $('miles').textContent = (meters / 1609.344).toFixed(1);
+  const open = data.pins.filter(p => !p.done).length;
+  $('openCount').textContent = open;
+  $('cOpen').textContent = open;
+  $('cDone').textContent = data.pins.length - open;
+}
+
+// ---------- state ----------
+let map = null, geocoder = null, meMarker = null, accCircle = null;
+let last = null, lastGood = null, lastKept = null, curSeg = null, tracking = false, follow = true, placing = false, firstFix = true;
+let mode = store.get(LSMODE) === 'report' ? 'report' : 'drive';
+let filter = 'open', selId = null, wake = null;
+let key = store.get(LSK) || '';
+let snapOn = store.get(LSSNAP) === '1', snapBusy = false, snapFailed = false;
+const lines = new Map(), markers = new Map();
+
+// ---------- GPS ----------
+const MIN_MOVE = 6, MAX_ACC = 35, GAP_M = 250, GAP_S = 45;
+function onPos(p){
+  const c = p.coords, fix = {lat: c.latitude, lng: c.longitude, acc: c.accuracy, t: p.timestamp || Date.now()};
+  last = fix; if (fix.acc <= 50) lastGood = fix;
+  $('gps').textContent = '±' + Math.round(fix.acc) + ' m';
+  drawMe(fix);
+  if (map && follow && (mode === 'drive' || firstFix)){
+    if (firstFix){ map.setCenter(fix); map.setZoom(17); } else map.panTo(fix);
+  }
+  firstFix = false;
+  if (!tracking || fix.acc > MAX_ACC) return;
+  if (lastKept){
+    const d = dist(lastKept, fix), dt = Math.max(1, (fix.t - lastKept.t) / 1000);
+    if (d < MIN_MOVE) return;
+    if ((d > GAP_M && dt > GAP_S) || d / dt > 70) curSeg = null; // GPS gap or jump: start a new line
+    else meters += d;
+  }
+  if (!curSeg){ curSeg = {raw: [], snap: [], upto: 0}; data.segs.push(curSeg); }
+  curSeg.raw.push([r6(fix.lat), r6(fix.lng)]);
+  lastKept = fix;
+  drawSeg(curSeg);
+  maybeSnap(curSeg, false);
+  updateStats();
+  save();
+}
+function onPosErr(e){
+  $('gps').textContent = 'Off';
+  if (e.code === 1) toast('Location is blocked. Allow it in iPhone Settings > Privacy > Location Services > Safari Websites.', 6000);
+}
+function startWatch(){
+  if (!navigator.geolocation){ $('gps').textContent = 'None'; return; }
+  navigator.geolocation.watchPosition(onPos, onPosErr, {enableHighAccuracy: true, maximumAge: 1000, timeout: 30000});
+}
+async function requestWake(){ try { if ('wakeLock' in navigator && document.visibilityState === 'visible') wake = await navigator.wakeLock.request('screen'); } catch(e){} }
+function releaseWake(){ try { if (wake) wake.release(); } catch(e){} wake = null; }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && tracking) requestWake();
+  if (document.visibilityState === 'hidden') save(true);
+});
+function setTracking(on){
+  tracking = on; store.set(LSTRK, on ? '1' : '0');
+  const b = $('trackBtn'); b.classList.toggle('on', on); b.textContent = on ? 'Stop tracking' : 'Start tracking';
+  if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking. Keep this screen open while driving.'); }
+  else { const s = curSeg; curSeg = null; lastKept = null; maybeSnap(s, true); releaseWake(); save(true); }
+}
+
+// ---------- snap to roads ----------
+async function maybeSnap(seg, force){
+  if (!seg || !snapOn || snapFailed || snapBusy || !key) return;
+  const need = force ? 2 : 30;
+  if (seg.raw.length - seg.upto < need) return;
+  const start = Math.max(0, seg.upto - 1), end = Math.min(seg.raw.length, start + 100);
+  const pts = seg.raw.slice(start, end);
+  snapBusy = true;
+  try {
+    const url = 'https://roads.googleapis.com/v1/snapToRoads?interpolate=true&key=' + encodeURIComponent(key) + '&path=' + pts.map(p => p[0] + ',' + p[1]).join('|');
+    const res = await fetch(url), j = await res.json();
+    if (!res.ok || j.error) throw new Error((j.error && j.error.message) || 'Roads API error');
+    let s = (j.snappedPoints || []).filter(q => q && q.location);
+    if (start < seg.upto){ const i = s.findIndex(q => q.originalIndex === 0); if (i >= 0) s = s.slice(i + 1); }
+    if (s.length) for (const q of s) seg.snap.push([r6(q.location.latitude), r6(q.location.longitude)]);
+    else for (const p of seg.raw.slice(seg.upto, end)) seg.snap.push(p);
+    seg.upto = end;
+    drawSeg(seg); save();
+  } catch(e){
+    snapFailed = true;
+    toast('Snap to roads failed (' + e.message + '). Using raw GPS for now.', 5000);
+  } finally { snapBusy = false; }
+  if (!snapFailed && seg.raw.length - seg.upto >= need) maybeSnap(seg, force);
+}
+
+// ---------- drawing ----------
+function segPath(seg){ return seg.snap.concat(seg.raw.slice(seg.upto)).map(P); }
+function drawSeg(seg){
+  if (!map) return;
+  let l = lines.get(seg);
+  if (!l){ l = new google.maps.Polyline({map, clickable: false, strokeColor: '#22c55e', strokeOpacity: .85, strokeWeight: 8, zIndex: 1}); lines.set(seg, l); }
+  l.setPath(segPath(seg));
+}
+function drawMe(fix){
+  if (!map) return;
+  if (!meMarker){
+    const d = document.createElement('div'); d.className = 'me';
+    meMarker = new google.maps.marker.AdvancedMarkerElement({map, position: fix, content: d, zIndex: 999});
+    accCircle = new google.maps.Circle({map, clickable: false, strokeOpacity: 0, fillColor: '#4f9dff', fillOpacity: .12, center: fix, radius: fix.acc});
+  } else { meMarker.position = fix; accCircle.setCenter(fix); accCircle.setRadius(fix.acc); }
+}
+function pinEl(p){
+  const d = document.createElement('div');
+  d.className = 'pin' + (p.done ? ' done' : '') + (p.id === selId ? ' sel' : '');
+  const s = document.createElement('span'); s.textContent = p.n; d.appendChild(s);
+  return d;
+}
+function drawPin(p){
+  if (!map) return;
+  let m = markers.get(p.id);
+  if (!m){
+    m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: p.lat, lng: p.lng}, content: pinEl(p), title: 'Light #' + p.n, gmpDraggable: mode === 'report', zIndex: 10});
+    m.addListener('click', () => { if (mode !== 'report') setMode('report'); select(p.id, true); });
+    m.addListener('dragend', () => {
+      const pos = m.position, lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat, lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
+      p.lat = r6(lat); p.lng = r6(lng); save(true); geocode(p); toast('Pin #' + p.n + ' moved');
+    });
+    markers.set(p.id, m);
+  } else { m.position = {lat: p.lat, lng: p.lng}; m.content = pinEl(p); }
+}
+function redrawAll(){
+  if (!map) return;
+  for (const l of lines.values()) l.setMap(null); lines.clear();
+  for (const m of markers.values()) m.map = null; markers.clear();
+  data.segs.forEach(drawSeg); data.pins.forEach(drawPin);
+}
+
+// ---------- pins ----------
+function addPin(lat, lng){
+  const p = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: data.nextN++, lat: r6(lat), lng: r6(lng), t: Date.now(), addr: '', note: '', done: false};
+  data.pins.push(p); save(true); drawPin(p); updateStats(); renderList(); geocode(p);
+  return p;
+}
+function geocode(p){
+  if (!geocoder){ p.addrErr = true; renderList(); return; }
+  p.addr = ''; p.addrErr = false; renderList();
+  geocoder.geocode({location: {lat: p.lat, lng: p.lng}}).then(({results}) => {
+    const pick = t => results.find(r => r.types.includes(t));
+    const best = pick('street_address') || pick('premise') || pick('route') || pick('intersection') || results[0];
+    p.addr = best ? best.formatted_address : 'No address found';
+  }).catch(() => { p.addrErr = true; }).finally(() => { save(true); renderList(); });
+}
+const gmUrl = p => 'https://www.google.com/maps/search/?api=1&query=' + p.lat + ',' + p.lng;
+const fmtT = t => new Date(t).toLocaleString([], {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+function visiblePins(){ return data.pins.filter(p => filter === 'all' || (filter === 'done' ? p.done : !p.done)).sort((a, b) => b.t - a.t); }
+let renderPending = false;
+function renderList(){
+  updateStats();
+  const ae = document.activeElement;
+  if (ae && ae.classList && ae.classList.contains('note')){ renderPending = true; return; }
+  renderPending = false;
+  const ps = visiblePins();
+  if (!ps.length){
+    $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : 'No pins yet. In Driving mode, tap Light out when you pass a dark streetlight.') + '</li>';
+    return;
+  }
+  $('list').innerHTML = ps.map(p => {
+    const addr = p.addr ? '<div class="addr" data-a="go">Near ' + esc(p.addr) + '</div>'
+      : p.addrErr ? '<div class="addr pending" data-a="go">Address lookup failed. <button data-a="retry" style="color:var(--amber);font-weight:600">Retry</button></div>'
+      : '<div class="addr pending" data-a="go">Looking up address...</div>';
+    return '<li class="item' + (p.done ? ' done' : '') + (p.id === selId ? ' hl' : '') + '" data-id="' + esc(p.id) + '">' +
+      '<div class="num">' + esc(p.n) + '</div><div>' + addr +
+      '<div class="meta">' + esc(fmtT(p.t)) + ' · ' + esc(p.lat.toFixed(5)) + ', ' + esc(p.lng.toFixed(5)) + (p.done ? ' · Reported' : '') + '</div>' +
+      '<input class="note" placeholder="Note or pole number" value="' + esc(p.note) + '">' +
+      '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(p)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
+      '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark reported') + '</button>' +
+      '<button data-a="del" class="del">Delete</button></div></div></li>';
+  }).join('');
+}
+function pinText(p){ return '#' + p.n + ': ' + (p.addr ? 'Near ' + p.addr : p.lat + ', ' + p.lng) + (p.note ? '\nNote: ' + p.note : '') + '\n' + gmUrl(p); }
+async function copyText(txt){
+  try { await navigator.clipboard.writeText(txt); toast('Copied'); return; } catch(e){}
+  const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch(e){} ta.remove();
+  toast(ok ? 'Copied' : 'Copy failed on this browser');
+}
+function select(id, pan){
+  selId = id; const p = data.pins.find(x => x.id === id); if (!p) return;
+  data.pins.forEach(drawPin);
+  if (pan && map){ follow = false; $('recenter').classList.add('show'); map.panTo({lat: p.lat, lng: p.lng}); if (map.getZoom() < 17) map.setZoom(18); }
+  renderList();
+  const li = document.querySelector('.item[data-id="' + CSS.escape(id) + '"]'); if (li) li.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+}
+
+$('list').addEventListener('click', e => {
+  const li = e.target.closest('.item'); if (!li) return;
+  const p = data.pins.find(x => x.id === li.dataset.id); if (!p) return;
+  const a = e.target.closest('[data-a]'); const act = a && a.dataset.a;
+  if (act === 'retry'){ e.stopPropagation(); geocode(p); }
+  else if (act === 'go') select(p.id, true);
+  else if (act === 'copy') copyText(pinText(p));
+  else if (act === 'done'){ p.done = !p.done; save(true); drawPin(p); renderList(); toast(p.done ? 'Marked #' + p.n + ' reported' : 'Reopened #' + p.n); }
+  else if (act === 'del') armed(a, 'Delete', () => { data.pins = data.pins.filter(x => x !== p); const m = markers.get(p.id); if (m){ m.map = null; markers.delete(p.id); } save(true); renderList(); toast('Deleted #' + p.n); });
+});
+$('list').addEventListener('input', e => {
+  if (!e.target.classList.contains('note')) return;
+  const p = data.pins.find(x => x.id === e.target.closest('.item').dataset.id); if (p){ p.note = e.target.value; save(); }
+});
+$('list').addEventListener('focusout', e => { if (e.target.classList.contains('note')){ save(true); setTimeout(() => { if (renderPending) renderList(); }, 0); } });
+
+// ---------- controls ----------
+$('pinBtn').addEventListener('click', () => {
+  if (!last){ toast('Waiting for GPS...'); return; }
+  const at = lastGood && (last.t - lastGood.t) < 15000 ? lastGood : last;
+  const b = $('pinBtn'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+  const p = addPin(at.lat, at.lng);
+  toast('Pinned light #' + p.n + (at.acc > 50 ? ' (weak GPS, check it later)' : ''));
+});
+$('trackBtn').addEventListener('click', () => setTracking(!tracking));
+$('recenter').addEventListener('click', () => { follow = true; $('recenter').classList.remove('show'); if (last && map){ map.panTo(last); if (map.getZoom() < 15) map.setZoom(17); } });
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  filter = c.dataset.f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); renderList();
+}));
+$('placeBtn').addEventListener('click', () => {
+  placing = !placing; $('placeBtn').textContent = placing ? 'Cancel' : 'Add on map';
+  if (placing) toast('Tap the map where the light is', 3500);
+});
+$('copyAll').addEventListener('click', () => {
+  const ps = visiblePins(); if (!ps.length){ toast('Nothing to copy'); return; }
+  copyText('Streetlights out (' + ps.length + ')\n\n' + ps.slice().sort((a, b) => a.n - b.n).map(pinText).join('\n\n'));
+});
+function setMode(m){
+  mode = m; store.set(LSMODE, m);
+  document.body.className = m;
+  $('tabDrive').classList.toggle('on', m === 'drive'); $('tabReport').classList.toggle('on', m === 'report');
+  $('drivePanel').hidden = m !== 'drive'; $('reportPanel').hidden = m !== 'report';
+  if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
+  for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
+  if (m === 'report'){
+    renderList();
+    if (map && data.pins.length && !selId){
+      follow = false; $('recenter').classList.add('show');
+      const b = new google.maps.LatLngBounds(); data.pins.forEach(p => b.extend({lat: p.lat, lng: p.lng}));
+      if (data.pins.length === 1){ map.setCenter(b.getCenter()); map.setZoom(17); }
+      else map.fitBounds(b, {top: 90, left: 40, right: 40, bottom: Math.round(window.innerHeight * .55) + 20});
+    }
+  } else { follow = true; $('recenter').classList.remove('show'); if (last && map) map.panTo(last); }
+}
+$('tabDrive').addEventListener('click', () => setMode('drive'));
+$('tabReport').addEventListener('click', () => setMode('report'));
+
+// ---------- settings ----------
+function openSettings(setup){ $('setupMsg').hidden = !setup; $('keyIn').value = key; $('snapIn').checked = snapOn; $('settings').hidden = false; }
+$('gear').addEventListener('click', () => openSettings(!key));
+$('closeSet').addEventListener('click', () => { $('settings').hidden = true; });
+$('settings').addEventListener('click', e => { if (e.target.id === 'settings') $('settings').hidden = true; });
+$('saveKey').addEventListener('click', () => {
+  const k = $('keyIn').value.trim(); if (!k){ toast('Paste a key first'); return; }
+  store.set(LSK, k); save(true); location.reload();
+});
+$('snapIn').addEventListener('change', e => { snapOn = e.target.checked; snapFailed = false; store.set(LSSNAP, snapOn ? '1' : '0'); if (snapOn && curSeg) maybeSnap(curSeg, false); });
+function download(name, text, type){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+const stamp = () => new Date().toISOString().slice(0, 10);
+$('expJson').addEventListener('click', () => download('streetlights-backup-' + stamp() + '.json', JSON.stringify(Object.assign({app: 'streetlight-tracker', v: 1, exported: new Date().toISOString()}, data)), 'application/json'));
+$('expCsv').addEventListener('click', () => {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const rows = [['Number', 'Status', 'Address', 'Latitude', 'Longitude', 'Pinned', 'Note', 'Google Maps']].concat(
+    data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]));
+  download('streetlights-' + stamp() + '.csv', rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv');
+});
+$('impBtn').addEventListener('click', () => $('impFile').click());
+$('impFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  f.text().then(t => {
+    const d = JSON.parse(t); if (!validData(d)) throw new Error('bad');
+    data = {segs: d.segs, pins: d.pins, nextN: d.nextN || d.pins.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1};
+    meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0); curSeg = null; lastKept = null;
+    save(true); redrawAll(); renderList(); toast('Backup imported');
+  }).catch(() => toast('That file is not a Streetlight Tracker backup')).finally(() => { e.target.value = ''; });
+});
+$('clrTrack').addEventListener('click', e => armed(e.currentTarget, 'Clear driven roads', () => {
+  data.segs = []; curSeg = null; lastKept = null; meters = 0; save(true); redrawAll(); updateStats(); toast('Driven roads cleared');
+}));
+$('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete all pins', () => {
+  data.pins = []; data.nextN = 1; selId = null; save(true); redrawAll(); renderList(); toast('All pins deleted');
+}));
+
+// ---------- Google Maps ----------
+window.gm_authFailure = () => { toast('Google rejected the API key. Check it in Settings.', 6000); openSettings(true); };
+window.__initMap = () => {
+  let view = null; try { view = JSON.parse(store.get(LSVIEW) || 'null'); } catch(e){}
+  const opts = {center: view ? view.c : {lat: 37.5, lng: -79.5}, zoom: view ? view.z : 7, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false};
+  if (google.maps.ColorScheme) opts.colorScheme = google.maps.ColorScheme.DARK;
+  map = new google.maps.Map($('map'), opts);
+  geocoder = new google.maps.Geocoder();
+  map.addListener('dragstart', () => { follow = false; $('recenter').classList.add('show'); });
+  map.addListener('idle', () => { const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()})); });
+  map.addListener('click', e => {
+    if (!placing || !e.latLng) return;
+    placing = false; $('placeBtn').textContent = 'Add on map';
+    const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Pinned light #' + p.n + '. Drag it to adjust.');
+  });
+  redrawAll();
+  if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(17); } }
+  data.pins.filter(p => !p.addr).forEach(geocode);
+  if (mode === 'report') setMode('report');
+};
+function loadMaps(){
+  const s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&libraries=marker&loading=async&callback=__initMap';
+  s.async = true; s.onerror = () => toast('Could not load Google Maps. Check your connection.', 5000);
+  document.head.appendChild(s);
+}
+
+// ---------- start ----------
+setMode(mode);
+updateStats();
+renderList();
+if (key) loadMaps(); else openSettings(true);
+startWatch();
+if (store.get(LSTRK) === '1') setTracking(true);
+window.addEventListener('pagehide', () => save(true));
+}
+</script>
+</body>
+</html>
