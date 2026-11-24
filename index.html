@@ -486,7 +486,7 @@ $('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete all p
 }));
 
 // ---------- Google Maps ----------
-let mapOk = false, mapErr = '';
+let mapOk = false, mapErr = '', scriptFailed = false, mapMade = false, initErr = '';
 function mapMsg(title, body){
   const m = $('mapMsg');
   if (!title){ m.hidden = true; return; }
@@ -512,13 +512,18 @@ for (const k of ['error', 'warn']){
   const orig = console[k];
   console[k] = function(){ try { googleError(Array.prototype.join.call(arguments, ' ')); } catch(e){} return orig.apply(console, arguments); };
 }
+window.addEventListener('error', e => { if (!mapOk && !mapErr){ initErr = e.message || 'Unknown error'; mapMsg('App error while loading the map', '<code>' + esc(initErr) + '</code><div>Send a screenshot of this to Claude.</div>'); } });
 window.gm_authFailure = () => { if (!mapErr) mapMsg('Google rejected the API key', '<div>Check the key in Settings, and its website restriction: <code>' + esc(location.origin) + '/*</code></div>'); };
-window.__initMap = () => {
+window.__initMap = () => { try { setupMap(); } catch(err){ initErr = err && err.message || String(err); mapMsg('Map setup failed', '<code>' + esc(initErr) + '</code><div>Send a screenshot of this to Claude.</div>'); } };
+function setupMap(){
   let view = null; try { view = JSON.parse(store.get(LSVIEW) || 'null'); } catch(e){}
   const opts = {center: view ? view.c : {lat: 37.5, lng: -79.5}, zoom: view ? view.z : 7, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false};
   if (google.maps.ColorScheme) opts.colorScheme = google.maps.ColorScheme.DARK;
   map = new google.maps.Map($('map'), opts);
-  google.maps.event.addListenerOnce(map, 'tilesloaded', () => { mapOk = true; mapMsg(); });
+  mapMade = true;
+  const ready = () => { if (!mapOk){ mapOk = true; mapMsg(); } };
+  google.maps.event.addListenerOnce(map, 'tilesloaded', ready);
+  google.maps.event.addListenerOnce(map, 'idle', ready);
   geocoder = new google.maps.Geocoder();
   map.addListener('dragstart', () => { follow = false; $('recenter').classList.add('show'); });
   map.addListener('idle', () => { const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()})); });
@@ -531,16 +536,20 @@ window.__initMap = () => {
   if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(17); } }
   data.pins.filter(p => !p.addr).forEach(geocode);
   if (mode === 'report') setMode('report');
-};
+}
 function loadMaps(){
   const s = document.createElement('script');
   s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&libraries=marker&loading=async&callback=__initMap';
   s.async = true;
-  s.onerror = () => mapMsg('Google Maps could not download', '<div>Something blocked the map script. Long-press the reload button and choose Reload Without Content Blockers, or check your connection.</div>');
+  s.onerror = () => { scriptFailed = true; mapMsg('Google Maps could not download', '<div>Something blocked the map script. Long-press the reload button and choose Reload Without Content Blockers, or check your connection.</div>'); };
   document.head.appendChild(s);
   setTimeout(() => {
-    if (mapOk || mapErr || !$('mapMsg').hidden) return;
-    mapMsg('Map still not loaded', '<div>' + (window.google && google.maps ? 'Google Maps started but drew nothing. In Google Cloud, check that Maps JavaScript API is enabled and billing is linked.' : 'The map script never arrived. Try Reload Without Content Blockers (long-press the reload button), then check your connection.') + '</div>');
+    if (mapOk || mapErr || scriptFailed || initErr) return;
+    const got = !!(window.google && google.maps);
+    mapMsg('Map still not loaded', '<div>' + (!got ? 'The map script never arrived. Try Reload Without Content Blockers (long-press the reload button), then check your connection.'
+      : !mapMade ? 'Google Maps arrived but never started the map. Send a screenshot of this to Claude.'
+      : 'The map was created but Google sent no map images. In Google Cloud, check that Maps JavaScript API is enabled and billing is linked.') +
+      '</div><div style="margin-top:6px;color:var(--mute);font-size:13px">Script: ' + (got ? 'loaded' : 'missing') + ' \u00b7 Map: ' + (mapMade ? 'created' : 'not created') + ' \u00b7 Site: ' + esc(location.origin) + '</div>');
   }, 12000);
 }
 
