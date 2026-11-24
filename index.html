@@ -85,6 +85,9 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 .pin span{transform:rotate(45deg);font:800 13px/1 -apple-system,sans-serif;color:var(--amberInk)}
 .pin.done{background:#7b818b;border-color:#3d4148}.pin.done span{color:#fff}
 .pin.sel{outline:3px solid #fff}
+#mapMsg{position:fixed;left:16px;right:16px;top:calc(var(--st) + 90px);z-index:4;background:rgba(28,31,36,.96);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45}
+#mapMsg b{display:block;font-size:16px;margin-bottom:4px}
+#mapMsg code{font-size:13px;color:var(--amber);overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.pinbtn.flash{animation:none}#toast{transition:none}}
 </style>
 </head>
@@ -155,6 +158,7 @@ body.report #recenter{bottom:calc(55vh + 12px)}
   </div>
 </div>
 
+<div id="mapMsg" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -482,12 +486,39 @@ $('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete all p
 }));
 
 // ---------- Google Maps ----------
-window.gm_authFailure = () => { toast('Google rejected the API key. Check it in Settings.', 6000); openSettings(true); };
+let mapOk = false, mapErr = '';
+function mapMsg(title, body){
+  const m = $('mapMsg');
+  if (!title){ m.hidden = true; return; }
+  m.innerHTML = '<b>' + esc(title) + '</b>' + body;
+  m.hidden = false;
+}
+const HINTS = {
+  RefererNotAllowedMapError: 'The key\'s website restriction does not match this site. In Google Cloud, set it to <code>' + esc(location.origin) + '/*</code>',
+  ApiNotActivatedMapError: 'Maps JavaScript API is not enabled for this key\'s project. Enable it in Google Cloud > APIs &amp; Services > Library.',
+  BillingNotEnabledMapError: 'No billing account is linked to the Google Cloud project. Link one under Billing (you stay within the free amount).',
+  InvalidKeyMapError: 'The key is not valid. Copy it again from Google Cloud > Credentials and paste it in Settings.',
+  MissingKeyMapError: 'No key was sent. Paste your key in Settings.',
+  ApiTargetBlockedMapError: 'The key\'s API restrictions do not include Maps JavaScript API. Add it to the key\'s allowed APIs.',
+  ExpiredKeyMapError: 'The key has expired or was deleted. Create a new one in Google Cloud.'
+};
+function googleError(text){
+  const m = String(text).match(/([A-Za-z]+MapError)/);
+  if (!m || mapOk) return;
+  mapErr = m[1];
+  mapMsg('Google Maps error: ' + mapErr, '<div>' + (HINTS[mapErr] || 'See the Google Maps error name above.') + '</div>');
+}
+for (const k of ['error', 'warn']){
+  const orig = console[k];
+  console[k] = function(){ try { googleError(Array.prototype.join.call(arguments, ' ')); } catch(e){} return orig.apply(console, arguments); };
+}
+window.gm_authFailure = () => { if (!mapErr) mapMsg('Google rejected the API key', '<div>Check the key in Settings, and its website restriction: <code>' + esc(location.origin) + '/*</code></div>'); };
 window.__initMap = () => {
   let view = null; try { view = JSON.parse(store.get(LSVIEW) || 'null'); } catch(e){}
   const opts = {center: view ? view.c : {lat: 37.5, lng: -79.5}, zoom: view ? view.z : 7, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false};
   if (google.maps.ColorScheme) opts.colorScheme = google.maps.ColorScheme.DARK;
   map = new google.maps.Map($('map'), opts);
+  google.maps.event.addListenerOnce(map, 'tilesloaded', () => { mapOk = true; mapMsg(); });
   geocoder = new google.maps.Geocoder();
   map.addListener('dragstart', () => { follow = false; $('recenter').classList.add('show'); });
   map.addListener('idle', () => { const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()})); });
@@ -504,15 +535,20 @@ window.__initMap = () => {
 function loadMaps(){
   const s = document.createElement('script');
   s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&libraries=marker&loading=async&callback=__initMap';
-  s.async = true; s.onerror = () => toast('Could not load Google Maps. Check your connection.', 5000);
+  s.async = true;
+  s.onerror = () => mapMsg('Google Maps could not download', '<div>Something blocked the map script. Long-press the reload button and choose Reload Without Content Blockers, or check your connection.</div>');
   document.head.appendChild(s);
+  setTimeout(() => {
+    if (mapOk || mapErr || !$('mapMsg').hidden) return;
+    mapMsg('Map still not loaded', '<div>' + (window.google && google.maps ? 'Google Maps started but drew nothing. In Google Cloud, check that Maps JavaScript API is enabled and billing is linked.' : 'The map script never arrived. Try Reload Without Content Blockers (long-press the reload button), then check your connection.') + '</div>');
+  }, 12000);
 }
 
 // ---------- start ----------
 setMode(mode);
 updateStats();
 renderList();
-if (key) loadMaps(); else openSettings(true);
+if (key){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else openSettings(true);
 startWatch();
 if (store.get(LSTRK) === '1') setTracking(true);
 window.addEventListener('pagehide', () => save(true));
