@@ -149,6 +149,12 @@ body.drive:not(.pc) #gear{display:none}
 .darkRow button{flex:1;min-width:0;width:auto;margin-top:0;min-height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16px}
 .darkRow svg{width:22px;height:22px;flex:none}
 .turnbtn{background:#0f2a38;border:2px solid #38bdf8;color:#7dd3fc}
+/* storage used (Settings) */
+.storeBar{height:8px;border-radius:4px;background:#2a2e36;overflow:hidden;margin-top:4px}
+.storeBar span{display:block;height:100%;width:0;background:var(--green);border-radius:4px}
+.storeBar.warn span{background:var(--amber)}
+.storeBar.full span{background:var(--red)}
+.card p.storeInfo{margin-top:6px;font-size:14px}
 .ochip{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#2a2e36;color:var(--mute);font-weight:600;font-size:15px}
 .ochip.on{border-color:var(--amber);color:var(--amber);background:#2a2410}
 #turnBtn2{color:#7dd3fc}
@@ -170,6 +176,9 @@ body.pc #placeBtn,body.pc #darkBtn2,body.pc #turnBtn2{display:none!important} /*
 .menuBtns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .menuBtns button{min-height:52px;border-radius:12px;background:#2a2e36;font-weight:600;font-size:16px;text-align:left;padding:0 16px}
 .menuBtns button.del{background:#3a2226;color:#ffb4b4}
+.menuBtns button.go{background:#4f9dff;color:#061a33;text-align:center}
+#darkBar.pin{background:#2a2410;border-color:var(--amber)}
+#darkBar.pin button{background:#3a3014;color:#ffd27a}
 body.pc #menu .card{max-width:420px}
 /* PC: iPhone view (440 x 956 points) inside a phone frame, scaled to fit */
 #phoneSim{position:fixed;inset:0;z-index:40;background:rgba(8,9,11,.9);display:flex;align-items:center;justify-content:center;gap:36px;padding:20px}
@@ -333,6 +342,8 @@ body.pc .chip:hover{color:var(--ink)}
     <div class="hr"></div>
     <label>Backup</label>
     <p>Data lives in this browser only. Export now and then so nothing is lost.</p>
+    <div class="storeBar"><span id="storeFill"></span></div>
+    <p id="storeInfo" class="storeInfo"></p>
     <div class="row">
       <button id="expJson" class="ghost">Export Backup</button>
       <button id="expCsv" class="ghost">Export Pins (CSV)</button>
@@ -411,12 +422,28 @@ function renumberPins(){
 renumberPins(); // also fixes gaps left in data saved by older versions
 if (!Array.isArray(data.dark)) data.dark = []; // streets with no lights: {id, path:[[lat,lng]...], t, name, straight}
 if (!Array.isArray(data.turns)) data.turns = []; // turnaround spots: {id, lat, lng, t}
-let saveTimer = null, warnedSave = false;
+let saveTimer = null, warnedSave = false, warnedFull = false;
+// Browsers cap this storage at about 5 MB per site; iPhone Safari counts each character as 2 bytes, so the
+// safe budget is about 2.5 million characters. Every drive adds GPS points, so warn well before it is full.
+const STORE_BUDGET = 2500000, STORE_WARN = .8;
+let storeChars = 0;
+const storePct = () => Math.min(100, Math.round(storeChars / STORE_BUDGET * 100));
 function save(now){
   clearTimeout(saveTimer);
-  const w = () => { if (!store.set(LS, JSON.stringify(data)) && !warnedSave){ warnedSave = true; toast('Could not save. Export a backup from Settings.'); } };
+  const w = () => {
+    const s = JSON.stringify(data); storeChars = s.length;
+    if (!store.set(LS, s)){
+      if (!warnedSave){ warnedSave = true; toast('Could not save: storage is full.\nExport a backup, then Clear Driven Roads in Settings.', 10000); }
+      return;
+    }
+    if (storeChars > STORE_BUDGET * STORE_WARN && !warnedFull){
+      warnedFull = true; // shown after whatever pop-up the save came from, so neither hides the other
+      setTimeout(() => toast('Storage is ' + storePct() + '% full.\nExport a backup, then Clear Driven Roads in Settings.', 10000), 5500);
+    }
+  };
   if (now) w(); else saveTimer = setTimeout(w, 1500);
 }
+storeChars = (store.get(LS) || '').length;
 function segLen(raw){ let m = 0; for (let i = 1; i < raw.length; i++) m += dist(P(raw[i-1]), P(raw[i])); return m; }
 let meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0);
 
@@ -563,7 +590,7 @@ function sideText(p){
 function scheduleResume(){ // driving: after the map is left alone for a few seconds, follow me again
   clearTimeout(resumeT);
   if (isPC || mode !== 'drive' || follow) return;
-  resumeT = setTimeout(() => { if (mode === 'drive' && !darkStep && !pickTurn && !placing && $('menu').hidden) followMe(); }, RESUME_MS);
+  resumeT = setTimeout(() => { if (mode === 'drive' && !picking() && !placing && $('menu').hidden) followMe(); }, RESUME_MS);
 }
 function onPosErr(e){
   $('gps').textContent = 'Off';
@@ -639,11 +666,9 @@ function drawPin(p){
   if (!map) return;
   let m = markers.get(p.id);
   if (!m){
-    m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: p.lat, lng: p.lng}, content: pinEl(p), title: 'Light #' + p.n, gmpDraggable: mode === 'report', zIndex: 10});
-    m.addListener('click', () => { if (darkStep || pickTurn) return; if (mode !== 'report') setMode('report'); select(p.id, true); });
-    m.addListener('dragend', () => {
-      const q = llOf(m.position); p.lat = r6(q.lat); p.lng = r6(q.lng); save(true); geocode(p); toast('Light #' + p.n + ' moved');
-    });
+    // locked in place: lights move only through the Move button in the Reporting list
+    m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: p.lat, lng: p.lng}, content: pinEl(p), title: 'Light #' + p.n, zIndex: 10});
+    m.addListener('click', () => { if (picking()) return; if (mode !== 'report') setMode('report'); select(p.id, true); });
     markers.set(p.id, m);
   } else { m.position = {lat: p.lat, lng: p.lng}; m.content = pinEl(p); }
 }
@@ -656,6 +681,7 @@ function drawDark(d){
       const ll = e.latLng && {lat: e.latLng.lat(), lng: e.latLng.lng()};
       if (darkStep){ if (ll) darkClick(ll); return; } // taps on a red line still count while picking points
       if (pickTurn){ if (ll) addTurnAt(ll); return; }
+      if (pickPin){ if (ll) movePinTo(pickPin, ll); return; }
       openLineMenu(d);
     });
     darkLines.set(d.id, l);
@@ -675,7 +701,7 @@ function drawTurn(t){
     const el = document.createElement('img'); el.className = 'turnmk'; el.src = TURN_IMG; el.width = 32; el.height = 32; el.alt = 'Turnaround';
     // locked in place: it only moves through its menu's Move button
     m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: t.lat, lng: t.lng}, content: el, title: 'Turn around here', zIndex: 9});
-    m.addListener('click', () => { if (darkStep || pickTurn) return; openTurnMenu(t); });
+    m.addListener('click', () => { if (picking()) return; openTurnMenu(t); });
     turnMarks.set(t.id, m);
   } else m.position = {lat: t.lat, lng: t.lng};
 }
@@ -742,17 +768,41 @@ async function routePath(a, b){
   throw err;
 }
 const tapWord = () => isPC ? 'Click' : 'Tap';
-function darkBar(txt, cls){ $('darkTxt').textContent = txt || ''; $('darkBar').hidden = !txt; $('darkBar').classList.toggle('turn', cls === 'turn'); }
+function darkBar(txt, cls){ $('darkTxt').textContent = txt || ''; $('darkBar').hidden = !txt; $('darkBar').classList.toggle('turn', cls === 'turn'); $('darkBar').classList.toggle('pin', cls === 'pin'); }
 function stopFollow(){ follow = false; $('recenter').classList.add('show'); }
-function noMap(){ // map tools need a live map; a frozen one is unfrozen (same map, no new load)
+// Map tools need a live map. A frozen map is simply unfrozen (same map, no new load). If the map was never
+// started, a pop-up offers Start Map, and the tool you tapped (next) carries on once the map has loaded.
+let pendingTool = null;
+function noMap(next){
   if (map && !live) setLive(true);
   if (canEdit()) return false;
-  toast(scriptStarted ? 'Wait for the map to load' : (isPC ? 'Press' : 'Tap') + ' Start Map first');
+  if (scriptStarted){ pendingTool = next || null; toast('Wait for the map to load'); return true; }
+  showMenu('Start the map first', 'Placing this needs the map. Starting it uses your Google Maps API.', [
+    {label: 'Start Map', cls: 'go', fn: () => { pendingTool = next || null; setLive(true); }}
+  ]);
   return true;
 }
+function runPendingTool(){ if (!pendingTool || !canEdit()) return; const f = pendingTool; pendingTool = null; setTimeout(f, 300); }
+// pick a new spot for a light (Move in the Reporting list); lights can't be dragged
+let pickPin = null;
+function startMovePin(p){
+  if (noMap(() => startMovePin(p))) return;
+  endDark(); mapRoom(); stopFollow();
+  if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
+  pickPin = p; selId = p.id;
+  darkBar(tapWord() + ' the new spot for Light #' + p.n, 'pin');
+  try { data.pins.forEach(drawPin); } catch(e){} // highlight it; never block moving
+}
+function movePinTo(p, ll){
+  endDark();
+  p.lat = r6(ll.lat); p.lng = r6(ll.lng); p.addr = '';
+  drawPin(p); save(true); geocode(p); renderList();
+  toast('Light #' + p.n + ' moved');
+}
+const picking = () => !!(darkStep || pickTurn || pickPin);
 function dotAt(ll){ const dot = document.createElement('div'); dot.className = 'dot'; return new google.maps.marker.AdvancedMarkerElement({map, position: ll, content: dot, zIndex: 20}); }
 function startDark(){
-  if (noMap()) return;
+  if (noMap(startDark)) return;
   if (darkStep){ endDark(); return; }
   endDark(); mapRoom();
   if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
@@ -761,7 +811,7 @@ function startDark(){
 }
 // one function cancels every "tap the map" mode: new dark street, moving a red line's end, turnarounds
 function endDark(){
-  darkStep = 0; darkA = null; darkEdit = null; pickTurn = false;
+  darkStep = 0; darkA = null; darkEdit = null; pickTurn = false; pickPin = null;
   if (darkMk){ darkMk.map = null; darkMk = null; }
   $('barHere').hidden = true; darkBar('');
   scheduleResume();
@@ -799,7 +849,7 @@ async function darkClick(ll){
   }
 }
 function editDark(d, which){ // move the start or end of a red line; the other end stays put
-  if (noMap()) return;
+  if (noMap(() => editDark(d, which))) return;
   endDark(); stopFollow(); mapRoom();
   darkEdit = {d, which}; darkStep = 4;
   darkMk = dotAt(P(which === 'start' ? d.path[d.path.length - 1] : d.path[0]));
@@ -824,7 +874,7 @@ function openLineMenu(d){
 // ---------- turnarounds ----------
 function mapRoom(){ if (!isPC && mode === 'report' && sheetState === 'full') setSheet('half'); } // uncover the map to tap on it
 function startTurn(moveT){
-  if (noMap()) return;
+  if (noMap(() => startTurn(moveT))) return;
   if (pickTurn && !moveT){ endDark(); return; }
   endDark(); mapRoom();
   if (moveT && moveT !== true) selId = moveT.id;
@@ -921,7 +971,7 @@ function renderList(){
       '<input class="note" placeholder="Note or pole number" value="' + esc(p.note) + '">' +
       '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(p)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
       '<button data-a="side">' + (p.side === 'L' ? 'Change to Right' : p.side === 'R' ? 'Change to Left' : 'Set Side') + '</button>' +
-      '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark Reported') + '</button>' +
+      '<button data-a="move">Move</button><button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark Reported') + '</button>' +
       '<button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
@@ -1014,6 +1064,7 @@ $('list').addEventListener('click', e => {
   if (act === 'retry'){ e.stopPropagation(); geocode(p); }
   else if (act === 'go') select(p.id, true);
   else if (act === 'copy') copyText(pinText(p));
+  else if (act === 'move') startMovePin(p);
   else if (act === 'side'){ // two taps to change a side, so a slip of the finger doesn't flip it
     if (p.side) armed(a, a.textContent, () => setSide(p, p.side === 'L' ? 'R' : 'L'));
     else showMenu('Light #' + p.n + ': which side?', 'Left or right of the road, as you were driving', [
@@ -1064,11 +1115,13 @@ $('recenter').addEventListener('click', () => {
 });
 function setFilter(f){ filter = f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x.dataset.f === f)); renderList(); }
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setFilter(c.dataset.f)));
-$('placeBtn').addEventListener('click', () => {
-  if (darkStep || pickTurn) endDark();
+function startPlace(){ // Add Pin: tap the map where the light is
+  if (!placing && noMap(startPlace)) return;
+  if (picking()) endDark();
   placing = !placing; $('placeLbl').textContent = placing ? 'Cancel' : 'Add Pin';
-  if (placing) toast('Tap the map where the light is', 3500);
-});
+  if (placing){ mapRoom(); stopFollow(); toast(tapWord() + ' the map where the light is', 3500); }
+}
+$('placeBtn').addEventListener('click', startPlace);
 $('copyAll').addEventListener('click', () => {
   if (filter === 'dark'){
     if (!data.dark.length){ toast('Nothing to copy'); return; }
@@ -1146,7 +1199,6 @@ function setMode(m){
   if (m === 'report') setSheet(sheetState); // before fitView, which needs the sheet's height
   if (m === 'report' && map && live && typeof map.setHeading === 'function') map.setHeading(0); // the list view is north up
   if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
-  for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
   if (m === 'report'){
     renderList();
     if (!selId) fitView();
@@ -1182,7 +1234,14 @@ document.querySelectorAll('.ochip').forEach(b => b.addEventListener('click', () 
   orient = b.dataset.o; store.set(LSOR, orient); paintOrient(); applyHeading(true);
   toast(orient === 'north' ? 'North stays at the top' : 'The way you are going stays at the top');
 }));
-function openSettings(setup){ $('setupMsg').hidden = !setup; keyDraft = key; maskKey(); $('snapIn').checked = snapOn; paintOrient(); $('settings').hidden = false; }
+function paintStorage(){
+  const pct = storePct(), mb = (storeChars * 2 / 1048576).toFixed(1);
+  $('storeFill').style.width = Math.max(pct, 1) + '%';
+  $('storeFill').parentNode.className = 'storeBar' + (pct >= 95 ? ' full' : pct >= STORE_WARN * 100 ? ' warn' : '');
+  $('storeInfo').textContent = 'Storage used: ' + mb + ' MB of about 5 MB (' + pct + '%).' +
+    (pct >= STORE_WARN * 100 ? ' Export a backup, then Clear Driven Roads to free space.' : ' Driven roads take up most of it.');
+}
+function openSettings(setup){ $('setupMsg').hidden = !setup; keyDraft = key; maskKey(); $('snapIn').checked = snapOn; paintOrient(); paintStorage(); $('settings').hidden = false; }
 $('gear').addEventListener('click', () => openSettings(!key));
 $('closeSet').addEventListener('click', () => { $('settings').hidden = true; });
 $('settings').addEventListener('click', e => { if (e.target.id === 'settings') $('settings').hidden = true; });
@@ -1201,7 +1260,7 @@ document.addEventListener('keydown', e => {
   if (!$('menu').hidden) closeMenu();
   else if (!$('settings').hidden) $('settings').hidden = true;
   else if (!$('phoneSim').hidden) closeSim();
-  else if (darkStep || pickTurn) endDark();
+  else if (picking() || placing){ endDark(); if (placing) startPlace(); }
 });
 $('snapIn').addEventListener('change', e => { snapOn = e.target.checked; snapFailed = false; store.set(LSSNAP, snapOn ? '1' : '0'); if (snapOn && curSeg) maybeSnap(curSeg, false); });
 function download(name, text, type){
@@ -1227,14 +1286,33 @@ function useData(d){ // replace everything in memory with d (a backup, or data s
   meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0); curSeg = null; lastKept = null; selId = null;
   redrawAll(); renderList();
 }
+const dataSummary = d => plural(d.pins.length, 'light', 'lights') + ', ' + plural((d.dark || []).length, 'dark street', 'dark streets') +
+  ', ' + plural((d.turns || []).length, 'turnaround', 'turnarounds') + ' and ' + (d.segs.reduce((m, s) => m + segLen(s.raw || []), 0) / 1609.344).toFixed(1) + ' miles of driving';
+// Importing never silently wipes this device: if it already has data, choose Merge (keep both) or Replace
+// (two taps). Merge adds whatever the backup has that this device doesn't, matched by id.
+function applyImport(d, how){
+  if (how === 'merge'){
+    const add = (mine, theirs) => { const ids = new Set(mine.map(x => x.id)); return mine.concat((theirs || []).filter(x => !ids.has(x.id))); };
+    const segKey = s => s.raw && s.raw.length ? s.raw[0].join(',') + '|' + s.raw.length : '';
+    const have = new Set(data.segs.map(segKey));
+    const pins = add(data.pins, d.pins).sort((a, b) => a.t - b.t);
+    pins.forEach((p, i) => { p.n = i + 1; }); // number lights in the order they were found
+    d = {segs: data.segs.concat(d.segs.filter(s => !have.has(segKey(s)))), pins, dark: add(data.dark, d.dark), turns: add(data.turns, d.turns)};
+  }
+  useData(d);
+  store.set(LSIMP, new Date().toISOString());
+  save(true); if (isPC && canEdit()) fitView();
+  toast((how === 'merge' ? 'Merged. This device now has ' : 'Imported ') + dataSummary(data), 6000);
+}
 function importFile(f){
   if (!f) return;
   f.text().then(t => {
     const d = JSON.parse(t); if (!validData(d)) throw new Error('bad');
-    useData(d);
-    store.set(LSIMP, d.exported || new Date().toISOString());
-    save(true); if (isPC && canEdit()) fitView();
-    toast('Imported ' + plural(data.pins.length, 'pin', 'pins'));
+    if (!(data.pins.length || data.segs.length || data.dark.length || data.turns.length)){ applyImport(d, 'replace'); return; }
+    showMenu('Import backup', 'This device has ' + dataSummary(data) + '. The backup has ' + dataSummary(d) + '.', [
+      {label: 'Merge (keep both)', cls: 'go', fn: () => applyImport(d, 'merge')},
+      {label: 'Replace everything', cls: 'del', confirm: true, fn: () => applyImport(d, 'replace')}
+    ]);
   }).catch(() => toast('That file is not a Streetlight Tracker backup'));
 }
 // The PC page and its iPhone view share this browser's storage: when one saves, the other picks it up,
@@ -1254,7 +1332,7 @@ $('clrDark').addEventListener('click', e => armed(e.currentTarget, 'Delete Dark 
   data.dark = []; selId = null; endDark(); save(true); redrawAll(); renderList(); toast('Dark streets deleted');
 }));
 $('clrTurns').addEventListener('click', e => armed(e.currentTarget, 'Delete Turnarounds', () => {
-  data.turns = []; endDark(); save(true); redrawAll(); toast('Turnarounds deleted');
+  data.turns = []; selId = null; endDark(); save(true); redrawAll(); renderList(); toast('Turnarounds deleted');
 }));
 
 // ---------- Google Maps ----------
@@ -1284,7 +1362,7 @@ for (const k of ['error', 'warn']){
   const orig = console[k];
   console[k] = function(){ try { googleError(Array.prototype.join.call(arguments, ' ')); } catch(e){} return orig.apply(console, arguments); };
 }
-window.addEventListener('error', e => { if (!mapOk && !mapErr){ initErr = e.message || 'Unknown error'; mapMsg('App error while loading the map', '<code>' + esc(initErr) + '</code><div>Send a screenshot of this to Claude.</div>'); } });
+window.addEventListener('error', e => { if (scriptStarted && !mapOk && !mapErr){ initErr = e.message || 'Unknown error'; mapMsg('App error while loading the map', '<code>' + esc(initErr) + '</code><div>Send a screenshot of this to Claude.</div>'); } });
 window.gm_authFailure = () => { if (!mapErr) mapMsg('Google rejected the API key', '<div>Check the key in Settings, and its website restriction: <code>' + esc(location.origin) + '/*</code></div>'); };
 window.__initMap = () => { try { setupMap(); } catch(err){ initErr = err && err.message || String(err); mapMsg('Map setup failed', '<code>' + esc(initErr) + '</code><div>Send a screenshot of this to Claude.</div>'); } };
 function setupMap(){
@@ -1310,9 +1388,10 @@ function setupMap(){
   map.addListener('click', e => {
     if (darkStep){ if (e.latLng) darkClick({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (pickTurn){ if (e.latLng) addTurnAt({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
+    if (pickPin){ if (e.latLng) movePinTo(pickPin, {lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (!placing || !e.latLng) return;
     placing = false; $('placeLbl').textContent = 'Add Pin';
-    const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Light #' + p.n + ' added. Drag it to adjust.');
+    const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Light #' + p.n + ' added. Use Move in the list to change its spot.', 5000);
   });
   redrawAll();
   if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(driveZoom); } }
@@ -1321,6 +1400,7 @@ function setupMap(){
   data.turns.filter(t => !t.addr).forEach(geocode);
   if (mode === 'report') setMode('report');
   applyLive(); // Stop Map may have been pressed while the map was loading
+  runPendingTool(); // the tool you tapped before starting the map
 }
 function loadMaps(){
   if (scriptStarted) return; scriptStarted = true;
@@ -1388,11 +1468,7 @@ if (isPC){
     if (!live){ setLive(true); toast('Map started again', 1500); }
     fn();
   };
-  $('toolPin').addEventListener('click', tool(() => {
-    if (darkStep || pickTurn) endDark();
-    placing = !placing; $('placeLbl').textContent = placing ? 'Cancel' : 'Add Pin';
-    if (placing) toast('Click the map where the light is', 3500);
-  }));
+  $('toolPin').addEventListener('click', tool(startPlace));
   $('toolDark').addEventListener('click', tool(startDark));
   $('toolTurn').addEventListener('click', tool(() => startTurn()));
   $('pcImport').addEventListener('click', () => $('impFile').click());
@@ -1400,10 +1476,12 @@ if (isPC){
   $('homeCsv').addEventListener('click', () => $('expCsv').click());
   $('homeJson').addEventListener('click', () => $('expJson').click());
   $('homeCopy').addEventListener('click', () => {
-    const ps = data.pins.filter(p => !p.done).sort((a, b) => a.n - b.n); if (!ps.length && !data.dark.length){ toast('Nothing to copy'); return; }
+    const ps = data.pins.filter(p => !p.done).sort((a, b) => a.n - b.n);
+    if (!ps.length && !data.dark.length && !data.turns.length){ toast('Nothing to copy'); return; }
     const parts = [];
     if (ps.length) parts.push('Streetlights out (' + ps.length + ')\n\n' + ps.map(pinText).join('\n\n'));
     if (data.dark.length) parts.push('Streets with no lights (' + data.dark.length + ')\n\n' + data.dark.map(darkText).join('\n\n'));
+    if (data.turns.length) parts.push('Turnarounds (' + data.turns.length + ')\n\n' + data.turns.map(turnText).join('\n\n'));
     copyText(parts.join('\n\n\n'));
   });
   const dz = $('drop'); let depth = 0; // drop a backup file anywhere on the window
