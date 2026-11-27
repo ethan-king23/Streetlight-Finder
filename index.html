@@ -30,7 +30,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .icon{width:52px;height:52px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 .icon svg{width:24px;height:24px}
 #recenter{position:fixed;right:12px;z-index:5;display:none}
-body.drive #recenter{bottom:calc(var(--sb) + 258px)}
+body.drive #recenter{bottom:calc(var(--sb) + 268px)}
 body.report #recenter{bottom:calc(var(--sheetH, 55vh) + 12px)}
 #recenter.show{display:grid}
 .panel{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 14px calc(var(--sb) + 14px);box-shadow:0 -8px 30px rgba(0,0,0,.4)}
@@ -44,7 +44,7 @@ body.report #recenter{bottom:calc(var(--sheetH, 55vh) + 12px)}
 .top2>*{pointer-events:auto}
 body.report #trackBtn{display:none}
 /* the two phone buttons share one look: same size and dark glass as the tabs, a colored icon, and a tint when on */
-.top2 button{flex:1;max-width:calc(50% - 4px);min-height:46px;padding:0 12px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
+.top2 button{flex:1;max-width:calc(50% - 4px);height:48px;min-height:48px;margin:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;line-height:1;padding:0 12px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
 .top2 .ic{width:18px;height:18px;flex:none}
 .top2 .dot{width:10px;height:10px;border-radius:50%;background:#7b818b;flex:none}
 #trackBtn.on{background:rgba(20,83,45,.94);border-color:#22c55e;color:#dcfce7}
@@ -109,7 +109,7 @@ body.pc .grab{display:none}
 .check{display:flex!important;gap:10px;align-items:center;font-weight:500!important}
 .check input{width:22px;height:22px;accent-color:var(--green)}
 .hr{height:1px;background:var(--line);margin:20px 0 4px}
-#toast{position:fixed;left:50%;top:calc(var(--st) + 128px);transform:translateX(-50%);z-index:30;background:#f3f1ea;color:#14161a;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast{position:fixed;left:50%;top:calc(var(--st) + 128px);transform:translateX(-50%);z-index:30;background:#f3f1ea;color:#14161a;padding:14px 20px;border-radius:14px;font-weight:600;font-size:16px;line-height:1.4;width:max-content;min-width:min(340px, 88vw);max-width:min(520px, 92vw);white-space:pre-line;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
 .me{width:20px;height:20px;border-radius:50%;background:#4f9dff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(79,157,255,.25)}
 .pin{position:relative;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--amber);border:2px solid #7a4d00;display:grid;place-items:center;margin-bottom:6px}
@@ -127,10 +127,16 @@ body.pc .grab{display:none}
 #darkBar button{min-height:40px;padding:0 14px;border-radius:10px;background:#3a2226;color:#ffb4b4;font-weight:600}
 .dot{width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 .item.dark .num{background:var(--red);color:#fff;font-size:12px}
-.darkRow{display:flex;gap:10px;margin-top:10px}
-.darkRow .darkbtn{margin-top:0;flex:1;width:auto}
-.turnbtn{flex:none;width:64px;min-height:52px;border-radius:14px;background:#0f2a38;border:2px solid #38bdf8;color:#38bdf8;display:grid;place-items:center}
-.turnbtn svg{width:26px;height:26px}
+.item.turnItem .num{background:#38bdf8;color:#06263a;font-size:12px}
+/* settings gear only on the Reporting screen (phone); Driving keeps the top clear */
+body.drive:not(.pc) #gear{display:none}
+/* bottom row: same two equal halves and gap as the LEFT / RIGHT buttons above it */
+.darkRow{display:flex;gap:12px;margin-top:12px}
+.darkRow button{flex:1;min-width:0;width:auto;margin-top:0;min-height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16px}
+.darkRow svg{width:22px;height:22px;flex:none}
+.turnbtn{background:#0f2a38;border:2px solid #38bdf8;color:#7dd3fc}
+.ochip{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#2a2e36;color:var(--mute);font-weight:600;font-size:15px}
+.ochip.on{border-color:var(--amber);color:var(--amber);background:#2a2410}
 #turnBtn2{color:#7dd3fc}
 #darkBar.turn{background:#0f2a38;border-color:#38bdf8}
 #darkBar.turn button{background:#16384a;color:#bfe9ff}
@@ -252,10 +258,10 @@ body.pc .chip:hover{color:var(--ink)}
 </main>
 
 <div class="top2">
-  <button id="trackBtn"><span class="dot"></span><span class="lbl">Start tracking</span></button>
+  <button id="trackBtn"><span class="dot"></span><span class="lbl">Start Tracking</span></button>
   <button id="phoneMapBtn" class="mapbtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg><span class="lbl">Start Map</span></button>
 </div>
-<div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start tracking also starts the map. Light out pins still work with the map off.</div>
+<div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start Tracking also starts the map. Light out pins still work with the map off.</div>
 
 <button id="recenter" class="icon" aria-label="Follow my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 
@@ -270,8 +276,8 @@ body.pc .chip:hover{color:var(--ink)}
     <button id="pinR" class="pinbtn" data-side="R"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>RIGHT<small>LIGHT OUT</small></button>
   </div>
   <div class="darkRow">
-    <button id="darkBtn" class="darkbtn">No streetlight on a street</button>
-    <button id="turnBtn" class="turnbtn" aria-label="Mark a turnaround spot" title="Mark a turnaround spot"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg></button>
+    <button id="darkBtn" class="darkbtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg>No Streetlight</button>
+    <button id="turnBtn" class="turnbtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg>Turnaround</button>
   </div>
 </section>
 
@@ -283,6 +289,7 @@ body.pc .chip:hover{color:var(--ink)}
       <button class="chip" data-f="done">Reported <span id="cDone">0</span></button>
       <button class="chip" data-f="all">All</button>
       <button class="chip" data-f="dark">Dark streets <span id="cDark">0</span></button>
+      <button class="chip" data-f="turns">Turnarounds <span id="cTurns">0</span></button>
     </div>
     <button id="placeBtn" class="small">Add on map</button>
     <button id="darkBtn2" class="small">No streetlight</button>
@@ -302,6 +309,11 @@ body.pc .chip:hover{color:var(--ink)}
     <div class="row"><button id="saveKey" class="primary">Save key and reload</button></div>
     <label class="check phoneOnly"><input id="snapIn" type="checkbox"> Snap driven path to roads (Roads API)</label>
     <p class="phoneOnly">Off: the green line follows raw GPS. On: it is matched to the road you drove, which looks cleaner.</p>
+    <label class="phoneOnly">Map direction while driving</label>
+    <div class="row phoneOnly orient">
+      <button class="ochip" data-o="heading">Direction I'm going at top</button>
+      <button class="ochip" data-o="north">North always at top</button>
+    </div>
     <div class="hr"></div>
     <label>Backup</label>
     <p>Data lives in this browser only. Export now and then so nothing is lost.</p>
@@ -394,7 +406,7 @@ let meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0);
 
 // ---------- ui helpers ----------
 let toastT;
-function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms || 2600); }
+function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), Math.max(ms || 0, 4000)); } // at least 4 s on screen
 function armed(btn, label, fn){ // two-tap confirm
   if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; fn(); return; }
   btn.dataset.armed = '1'; btn.textContent = 'Tap again to confirm';
@@ -410,6 +422,7 @@ function updateStats(){
   $('cOpen').textContent = open;
   $('cDone').textContent = data.pins.length - open;
   $('cDark').textContent = data.dark.length;
+  $('cTurns').textContent = data.turns.length;
   $('sheetSum').textContent = open + ' open · ' + (data.pins.length - open) + ' reported · ' + data.dark.length + ' dark streets';
   if (isPC){
     const done = data.pins.length - open, imp = store.get(LSIMP);
@@ -459,6 +472,7 @@ function onPos(p){
   drawMe(fix);
   if (map && live && follow && (mode === 'drive' || firstFix)){
     if (firstFix){ map.setCenter(fix); map.setZoom(driveZoom); } else map.panTo(fix);
+    if (mode === 'drive') applyHeading();
   }
   firstFix = false;
   if (!tracking || fix.acc > MAX_ACC) return;
@@ -498,6 +512,22 @@ function nearDark(f){
 function followMe(){ // center on my location and keep following it
   clearTimeout(resumeT); follow = true; $('recenter').classList.remove('show');
   if (last && map && live) map.panTo(last);
+  applyHeading(true);
+}
+// Map direction while driving (Settings): 'heading' turns the map so the way you're going is at the top
+// (the default); 'north' keeps north up. Reporting is always north up. Rotation needs Google's vector map.
+const LSOR = 'slt.orient';
+let orient = store.get(LSOR) === 'north' ? 'north' : 'heading';
+function applyHeading(force){
+  if (!map || !live || isPC || typeof map.setHeading !== 'function') return;
+  let want = 0;
+  if (mode === 'drive' && orient === 'heading'){
+    if (!follow) return; // you moved the map yourself: leave it as it is
+    if (!lastHd || Date.now() - lastHd.t > 30000) return; // stopped: keep the last direction
+    want = lastHd.deg;
+  }
+  const cur = map.getHeading() || 0, diff = Math.abs(((want - cur + 540) % 360) - 180);
+  if (force || diff > 6) map.setHeading(want); // ignore small wobbles so the map doesn't twitch
 }
 function bearing(a, b){ // degrees clockwise from north, a -> b
   const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
@@ -535,7 +565,7 @@ document.addEventListener('visibilitychange', () => {
 function setTracking(on){
   if (on && !live) setLive(true); // tracking starts the map
   tracking = on; store.set(LSTRK, on ? '1' : '0');
-  const b = $('trackBtn'); b.classList.toggle('on', on); b.querySelector('.lbl').textContent = on ? 'Stop tracking' : 'Start tracking';
+  const b = $('trackBtn'); b.classList.toggle('on', on); b.querySelector('.lbl').textContent = on ? 'Stop Tracking' : 'Start Tracking';
   paintMapBtns();
   if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking. Keep this screen open while driving.'); }
   else { const s = curSeg; curSeg = null; lastKept = null; maybeSnap(s, true); releaseWake(); save(true); }
@@ -707,7 +737,7 @@ function dotAt(ll){ const dot = document.createElement('div'); dot.className = '
 function startDark(){
   if (noMap()) return;
   if (darkStep){ endDark(); return; }
-  endDark();
+  endDark(); mapRoom();
   if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
   darkStep = 1; stopFollow();
   darkBar(tapWord() + ' the START of the street with no lights');
@@ -753,7 +783,7 @@ async function darkClick(ll){
 }
 function editDark(d, which){ // move the start or end of a red line; the other end stays put
   if (noMap()) return;
-  endDark(); stopFollow();
+  endDark(); stopFollow(); mapRoom();
   darkEdit = {d, which}; darkStep = 4;
   darkMk = dotAt(P(which === 'start' ? d.path[d.path.length - 1] : d.path[0]));
   darkBar(tapWord() + ' the new ' + (which === 'start' ? 'START' : 'END') + ' of S' + darkNum(d));
@@ -775,10 +805,12 @@ function openLineMenu(d){
 }
 
 // ---------- turnarounds ----------
+function mapRoom(){ if (!isPC && mode === 'report' && sheetState === 'full') setSheet('half'); } // uncover the map to tap on it
 function startTurn(moveT){
   if (noMap()) return;
   if (pickTurn && !moveT){ endDark(); return; }
-  endDark();
+  endDark(); mapRoom();
+  if (moveT && moveT !== true) selId = moveT.id;
   if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
   pickTurn = moveT || true; stopFollow();
   $('barHere').hidden = !last;
@@ -786,19 +818,25 @@ function startTurn(moveT){
 }
 function addTurnAt(ll){
   const mv = pickTurn; endDark();
-  if (mv && mv !== true){ mv.lat = r6(ll.lat); mv.lng = r6(ll.lng); drawTurn(mv); save(true); toast('Turnaround moved'); return; }
-  const t = {id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), lat: r6(ll.lat), lng: r6(ll.lng), t: Date.now()};
-  data.turns.push(t); drawTurn(t); save(true); toast('Turnaround marked');
+  if (mv && mv !== true){
+    mv.lat = r6(ll.lat); mv.lng = r6(ll.lng); mv.addr = ''; drawTurn(mv); save(true); geocode(mv); renderList();
+    toast('Turnaround T' + turnNum(mv) + ' moved'); return;
+  }
+  const t = {id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), lat: r6(ll.lat), lng: r6(ll.lng), t: Date.now(), addr: ''};
+  data.turns.push(t); drawTurn(t); save(true); geocode(t); renderList(); toast('Turnaround T' + turnNum(t) + ' marked');
+}
+function deleteTurn(t){
+  const n = turnNum(t); data.turns = data.turns.filter(x => x !== t);
+  const m = turnMarks.get(t.id); if (m){ m.map = null; turnMarks.delete(t.id); }
+  if (selId === t.id) selId = null;
+  save(true); renderList(); toast('Deleted turnaround T' + n);
 }
 function openTurnMenu(t){
-  showMenu('Turnaround', 'A safe spot to turn around · ' + fmtT(t.t), [
+  showMenu('Turnaround T' + turnNum(t), (t.addr ? 'Near ' + t.addr + ' · ' : '') + fmtT(t.t), [
     {label: 'Move', fn: () => startTurn(t)},
+    {label: 'Show in list', fn: () => { if (mode !== 'report') setMode('report'); setFilter('turns'); select(t.id, false); }},
     {label: 'Open in Google Maps', fn: () => window.open(gmUrl(t), '_blank', 'noopener')},
-    {label: 'Delete turnaround', cls: 'del', confirm: true, fn: () => {
-      data.turns = data.turns.filter(x => x !== t);
-      const m = turnMarks.get(t.id); if (m){ m.map = null; turnMarks.delete(t.id); }
-      save(true); toast('Turnaround deleted');
-    }}
+    {label: 'Delete turnaround', cls: 'del', confirm: true, fn: () => deleteTurn(t)}
   ]);
 }
 $('turnBtn').addEventListener('click', () => startTurn());
@@ -849,6 +887,7 @@ function renderList(){
   if (ae && ae.classList && ae.classList.contains('note')){ renderPending = true; return; }
   renderPending = false;
   if (filter === 'dark'){ renderDark(); return; }
+  if (filter === 'turns'){ renderTurns(); return; }
   const ps = visiblePins();
   if (!ps.length){
     $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : isPC ? 'No pins yet. Import a backup from your iPhone.' : 'No pins yet. In Driving mode, tap Light out when you pass a dark streetlight.') + '</li>';
@@ -885,10 +924,31 @@ function renderDark(){
       '<button data-a="copy">Copy</button><button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
+const turnNum = t => data.turns.indexOf(t) + 1;
+function renderTurns(){
+  if (!data.turns.length){
+    $('list').innerHTML = '<li class="empty">No turnarounds yet. Use the U-turn button, then ' + (isPC ? 'click' : 'tap') + ' the map where it is safe to turn around.</li>';
+    return;
+  }
+  $('list').innerHTML = data.turns.slice().sort((a, b) => b.t - a.t).map(t =>
+    '<li class="item turnItem' + (t.id === selId ? ' hl' : '') + '" data-turn="' + esc(t.id) + '">' +
+    '<div class="num">T' + turnNum(t) + '</div><div>' +
+    '<div class="addr" data-a="go">' + (t.addr ? 'Near ' + esc(t.addr) : 'Turnaround') + '</div>' +
+    '<div class="meta">' + esc(fmtT(t.t)) + ' · ' + t.lat.toFixed(5) + ', ' + t.lng.toFixed(5) + '</div>' +
+    '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(t)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
+    '<button data-a="go">Show on map</button><button data-a="move">Move</button><button data-a="del" class="del">Delete</button></div></div></li>'
+  ).join('');
+}
+function turnText(t){ return 'Turnaround T' + turnNum(t) + ': ' + (t.addr ? 'Near ' + t.addr : t.lat + ', ' + t.lng) + '\n' + gmUrl(t); }
 function pinText(p){ return '#' + p.n + ': ' + (p.addr ? 'Near ' + p.addr : p.lat + ', ' + p.lng) + (p.side ? '\n' + sideText(p) : '') + (p.note ? '\nNote: ' + p.note : '') + '\n' + gmUrl(p); }
+// pop-up after marking or changing a light: "Light #3 · Left side" with the direction on the next line
+function pinToast(p){
+  const [lr, dir] = sideText(p).split(' · ');
+  return 'Light #' + p.n + ' · ' + lr + (dir ? '\n' + dir.charAt(0).toUpperCase() + dir.slice(1) : '');
+}
 function setSide(p, side){
   p.side = side; save(true); renderList();
-  toast('#' + p.n + ': ' + sideText(p));
+  toast(pinToast(p));
 }
 async function copyText(txt){
   try { await navigator.clipboard.writeText(txt); toast('Copied'); return; } catch(e){}
@@ -897,17 +957,19 @@ async function copyText(txt){
   toast(ok ? 'Copied' : 'Copy failed on this browser');
 }
 function select(id, pan){
-  const p = data.pins.find(x => x.id === id), d = !p && data.dark.find(x => x.id === id); if (!p && !d) return;
+  const p = data.pins.find(x => x.id === id), d = !p && data.dark.find(x => x.id === id), t = !p && !d && data.turns.find(x => x.id === id);
+  if (!p && !d && !t) return;
   selId = id;
   if (!isPC && mode === 'report' && sheetState === 'min') setSheet('half'); // show the item you picked
   data.pins.forEach(drawPin); data.dark.forEach(drawDark);
   if (pan && canEdit()){ // a frozen map stays where it is
     follow = false; $('recenter').classList.add('show');
-    if (p){ map.panTo({lat: p.lat, lng: p.lng}); if (map.getZoom() < 17) map.setZoom(18); }
+    const spot = p || t;
+    if (spot){ map.panTo({lat: spot.lat, lng: spot.lng}); if (map.getZoom() < 17) map.setZoom(18); }
     else { const b = new google.maps.LatLngBounds(); d.path.forEach(q => b.extend(P(q))); map.fitBounds(b, fitPad()); }
   }
   renderList();
-  const li = document.querySelector(p ? '.item[data-id="' + CSS.escape(id) + '"]' : '.item[data-dark="' + CSS.escape(id) + '"]');
+  const li = document.querySelector('.item[data-' + (p ? 'id' : d ? 'dark' : 'turn') + '="' + CSS.escape(id) + '"]');
   if (li) li.scrollIntoView({block: 'nearest', behavior: 'smooth'});
 }
 
@@ -920,6 +982,14 @@ $('list').addEventListener('click', e => {
     else if (act === 'copy') copyText(darkText(d));
     else if (act === 'start' || act === 'end') editDark(d, act);
     else if (act === 'del') armed(a, 'Delete', () => deleteDark(d));
+    return;
+  }
+  if (li.dataset.turn){
+    const t = data.turns.find(x => x.id === li.dataset.turn); if (!t) return;
+    const a = e.target.closest('[data-a]'), act = a && a.dataset.a;
+    if (act === 'go') select(t.id, true);
+    else if (act === 'move') startTurn(t);
+    else if (act === 'del') armed(a, 'Delete', () => deleteTurn(t));
     return;
   }
   const p = data.pins.find(x => x.id === li.dataset.id); if (!p) return;
@@ -955,7 +1025,7 @@ $('list').addEventListener('focusout', e => { if (e.target.classList.contains('n
   const b = $(id); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
   const hd = lastHd && (Date.now() - lastHd.t) < 30000 ? lastHd.deg : null; // direction you were driving
   const p = addPin(at.lat, at.lng, b.dataset.side, hd);
-  toast('#' + p.n + ' ' + sideText(p).toLowerCase() + (at.acc > 50 ? ' (weak GPS, check it later)' : ''), 3500);
+  toast(pinToast(p) + (at.acc > 50 ? '\nWeak GPS, check it later' : ''), 5000);
 }));
 // Starting a drive is one tap. Ending it takes two, so a stray tap doesn't stop the recording.
 let stopArmT = null;
@@ -965,7 +1035,7 @@ $('trackBtn').addEventListener('click', () => {
   if (!b.classList.contains('confirm')){
     b.classList.add('confirm'); b.querySelector('.lbl').textContent = 'Tap again to stop';
     clearTimeout(stopArmT);
-    stopArmT = setTimeout(() => { b.classList.remove('confirm'); if (tracking) b.querySelector('.lbl').textContent = 'Stop tracking'; }, 3000);
+    stopArmT = setTimeout(() => { b.classList.remove('confirm'); if (tracking) b.querySelector('.lbl').textContent = 'Stop Tracking'; }, 3000);
     return;
   }
   clearTimeout(stopArmT); b.classList.remove('confirm');
@@ -986,6 +1056,10 @@ $('copyAll').addEventListener('click', () => {
   if (filter === 'dark'){
     if (!data.dark.length){ toast('Nothing to copy'); return; }
     copyText('Streets with no lights (' + data.dark.length + ')\n\n' + data.dark.map(darkText).join('\n\n')); return;
+  }
+  if (filter === 'turns'){
+    if (!data.turns.length){ toast('Nothing to copy'); return; }
+    copyText('Turnarounds (' + data.turns.length + ')\n\n' + data.turns.map(turnText).join('\n\n')); return;
   }
   const ps = visiblePins(); if (!ps.length){ toast('Nothing to copy'); return; }
   copyText('Streetlights out (' + ps.length + ')\n\n' + ps.slice().sort((a, b) => a.n - b.n).map(pinText).join('\n\n'));
@@ -1053,6 +1127,7 @@ function setMode(m){
   $('tabDrive').classList.toggle('on', m === 'drive'); $('tabReport').classList.toggle('on', m === 'report');
   $('drivePanel').hidden = m !== 'drive'; $('reportPanel').hidden = m !== 'report';
   if (m === 'report') setSheet(sheetState); // before fitView, which needs the sheet's height
+  if (m === 'report' && map && live && typeof map.setHeading === 'function') map.setHeading(0); // the list view is north up
   if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
   for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
   if (m === 'report'){
@@ -1085,7 +1160,12 @@ keyIn.addEventListener('input', () => {
   keyDraft = keyIn.value; keyActive();
 });
 keyIn.addEventListener('blur', maskKey);
-function openSettings(setup){ $('setupMsg').hidden = !setup; keyDraft = key; maskKey(); $('snapIn').checked = snapOn; $('settings').hidden = false; }
+function paintOrient(){ document.querySelectorAll('.ochip').forEach(b => b.classList.toggle('on', b.dataset.o === orient)); }
+document.querySelectorAll('.ochip').forEach(b => b.addEventListener('click', () => {
+  orient = b.dataset.o; store.set(LSOR, orient); paintOrient(); applyHeading(true);
+  toast(orient === 'north' ? 'North stays at the top' : 'The way you are going stays at the top');
+}));
+function openSettings(setup){ $('setupMsg').hidden = !setup; keyDraft = key; maskKey(); $('snapIn').checked = snapOn; paintOrient(); $('settings').hidden = false; }
 $('gear').addEventListener('click', () => openSettings(!key));
 $('closeSet').addEventListener('click', () => { $('settings').hidden = true; });
 $('settings').addEventListener('click', e => { if (e.target.id === 'settings') $('settings').hidden = true; });
@@ -1119,7 +1199,7 @@ $('expCsv').addEventListener('click', () => {
     data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.side ? sideText(p) : '', p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]),
     data.dark.map(d => { const s = d.path[0], e = d.path[d.path.length - 1];
       return ['S' + darkNum(d), 'No streetlights (street)', d.name, '', s[0], s[1], new Date(d.t).toLocaleString(), 'Ends at ' + e[0] + ', ' + e[1] + ' · ' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', gmUrl(P(s))]; }),
-    data.turns.map((t, i) => ['T' + (i + 1), 'Turnaround', '', '', t.lat, t.lng, new Date(t.t).toLocaleString(), '', gmUrl(t)]));
+    data.turns.map((t, i) => ['T' + (i + 1), 'Turnaround', t.addr || '', '', t.lat, t.lng, new Date(t.t).toLocaleString(), '', gmUrl(t)]));
   download('streetlights-' + stamp() + '.csv', rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv');
 });
 $('impBtn').addEventListener('click', () => $('impFile').click());
@@ -1194,6 +1274,7 @@ function setupMap(){
   let view = null; try { view = JSON.parse(store.get(LSVIEW) || 'null'); } catch(e){}
   const opts = {center: view ? view.c : {lat: 37.5, lng: -79.5}, zoom: view ? view.z : 7, mapId: 'DEMO_MAP_ID', disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false};
   if (google.maps.ColorScheme) opts.colorScheme = google.maps.ColorScheme.DARK;
+  if (google.maps.RenderingType) opts.renderingType = google.maps.RenderingType.VECTOR; // needed to turn the map
   map = new google.maps.Map($('map'), opts);
   mapMade = true;
   const ready = () => { if (!mapOk){ mapOk = true; mapMsg(); } };
@@ -1220,6 +1301,7 @@ function setupMap(){
   if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(driveZoom); } }
   data.pins.filter(p => !p.addr).forEach(geocode);
   data.dark.filter(d => !d.name).forEach(nameDark);
+  data.turns.filter(t => !t.addr).forEach(geocode);
   if (mode === 'report') setMode('report');
   applyLive(); // Stop Map may have been pressed while the map was loading
 }
