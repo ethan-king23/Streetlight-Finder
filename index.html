@@ -381,6 +381,10 @@ let map = null, geocoder = null, meMarker = null, accCircle = null;
 let last = null, lastGood = null, lastKept = null, curSeg = null, tracking = false, follow = true, placing = false, firstFix = true;
 let mode = isPC || store.get(LSMODE) === 'report' ? 'report' : 'drive';
 let scriptStarted = false, wantMap = false;
+// Driving mode keeps its own zoom (Reporting zooms out to fit all pins, which shouldn't carry over to driving),
+// and if you pinch or drag the map while driving it goes back to following you after a few seconds.
+const LSDZ = 'slt.driveZoom', RESUME_MS = 8000;
+let driveZoom = Math.min(21, Math.max(12, +store.get(LSDZ) || 17)), resumeT = null;
 let live = !isPC; // PC only: true = map updating (Update Map), false = frozen snapshot or not loaded
 const canEdit = () => !!map && live;
 let filter = 'open', selId = null, wake = null;
@@ -400,7 +404,7 @@ function onPos(p){
   $('gps').textContent = '±' + Math.round(fix.acc) + ' m';
   drawMe(fix);
   if (map && follow && (mode === 'drive' || firstFix)){
-    if (firstFix){ map.setCenter(fix); map.setZoom(17); } else map.panTo(fix);
+    if (firstFix){ map.setCenter(fix); map.setZoom(driveZoom); } else map.panTo(fix);
   }
   firstFix = false;
   if (!tracking || fix.acc > MAX_ACC) return;
@@ -436,6 +440,15 @@ function nearDark(f){
     }
   }
   return false;
+}
+function followMe(){ // center on my location and keep following it
+  clearTimeout(resumeT); follow = true; $('recenter').classList.remove('show');
+  if (last && map) map.panTo(last);
+}
+function scheduleResume(){ // driving: after the map is left alone for a few seconds, follow me again
+  clearTimeout(resumeT);
+  if (isPC || mode !== 'drive' || follow) return;
+  resumeT = setTimeout(() => { if (mode === 'drive' && !darkStep && !pickTurn && !placing && $('menu').hidden) followMe(); }, RESUME_MS);
 }
 function onPosErr(e){
   $('gps').textContent = 'Off';
@@ -629,6 +642,7 @@ function endDark(){
   darkStep = 0; darkA = null; darkEdit = null; pickTurn = false;
   if (darkMk){ darkMk.map = null; darkMk = null; }
   $('barHere').hidden = true; darkBar('');
+  scheduleResume();
 }
 async function roadBetween(a, b){ // -> {path:[[lat,lng]], straight}
   try { return {path: (await routePath(a, b)).map(q => [r6(q.lat), r6(q.lng)]), straight: false}; }
@@ -855,7 +869,10 @@ $('pinBtn').addEventListener('click', () => {
   toast('Pinned light #' + p.n + (at.acc > 50 ? ' (weak GPS, check it later)' : ''));
 });
 $('trackBtn').addEventListener('click', () => setTracking(!tracking));
-$('recenter').addEventListener('click', () => { follow = true; $('recenter').classList.remove('show'); if (last && map){ map.panTo(last); if (map.getZoom() < 15) map.setZoom(17); } });
+$('recenter').addEventListener('click', () => {
+  followMe();
+  if (map && map.getZoom() < 14) map.setZoom(mode === 'drive' ? driveZoom : 17);
+});
 function setFilter(f){ filter = f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x.dataset.f === f)); renderList(); }
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setFilter(c.dataset.f)));
 $('placeBtn').addEventListener('click', () => {
@@ -895,7 +912,10 @@ function setMode(m){
   if (m === 'report'){
     renderList();
     if (!selId) fitView();
-  } else { follow = true; $('recenter').classList.remove('show'); if (last && map) map.panTo(last); }
+  } else { // back to driving: your driving zoom, centered on you
+    if (map) map.setZoom(driveZoom);
+    followMe();
+  }
 }
 $('tabDrive').addEventListener('click', () => setMode('drive'));
 $('tabReport').addEventListener('click', () => setMode('report'));
@@ -1034,8 +1054,15 @@ function setupMap(){
   google.maps.event.addListenerOnce(map, 'tilesloaded', ready);
   google.maps.event.addListenerOnce(map, 'idle', ready);
   geocoder = new google.maps.Geocoder();
-  map.addListener('dragstart', () => { follow = false; $('recenter').classList.add('show'); });
-  map.addListener('idle', () => { const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()})); });
+  map.addListener('dragstart', () => { clearTimeout(resumeT); follow = false; $('recenter').classList.add('show'); });
+  map.addListener('idle', () => {
+    const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()}));
+    if (!follow) scheduleResume(); // the countdown restarts every time you touch the map again
+  });
+  map.addListener('zoom_changed', () => { // remember the zoom you pick while driving (pinching included)
+    const z = map.getZoom();
+    if (mode === 'drive' && !isPC && z){ driveZoom = Math.min(21, Math.max(12, z)); store.set(LSDZ, String(driveZoom)); }
+  });
   map.addListener('click', e => {
     if (darkStep){ if (e.latLng) darkClick({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (pickTurn){ if (e.latLng) addTurnAt({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
@@ -1044,7 +1071,7 @@ function setupMap(){
     const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Pinned light #' + p.n + '. Drag it to adjust.');
   });
   redrawAll();
-  if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(17); } }
+  if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(driveZoom); } }
   data.pins.filter(p => !p.addr).forEach(geocode);
   data.dark.filter(d => !d.name).forEach(nameDark);
   if (mode === 'report') setMode('report');
