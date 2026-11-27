@@ -30,7 +30,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .icon{width:52px;height:52px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 .icon svg{width:24px;height:24px}
 #recenter{position:fixed;right:12px;z-index:5;display:none}
-body.drive #recenter{bottom:calc(var(--sb) + 196px)}
+body.drive #recenter{bottom:calc(var(--sb) + 258px)}
 body.report #recenter{bottom:calc(55vh + 12px)}
 #recenter.show{display:grid}
 .panel{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 14px calc(var(--sb) + 14px);box-shadow:0 -8px 30px rgba(0,0,0,.4)}
@@ -89,7 +89,53 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 #mapMsg{position:fixed;left:16px;right:16px;top:calc(var(--st) + 90px);z-index:4;background:rgba(28,31,36,.96);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45}
 #mapMsg b{display:block;font-size:16px;margin-bottom:4px}
 #mapMsg code{font-size:13px;color:var(--amber);overflow-wrap:anywhere}
+/* No streetlight: a red stretch of road picked by tapping its start and end */
+.darkbtn{width:100%;margin-top:10px;min-height:52px;border-radius:14px;background:#2a1517;border:2px solid var(--red);color:#ffb4b4;font-weight:700;font-size:16px}
+#darkBtn2{color:#ffb4b4}
+#darkBar{position:fixed;left:12px;right:12px;top:calc(var(--st) + 74px);z-index:7;display:flex;gap:10px;align-items:center;background:#2a1517;border:1px solid var(--red);border-radius:14px;padding:10px 12px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+#darkBar span{flex:1}
+#darkBar button{min-height:40px;padding:0 14px;border-radius:10px;background:#3a2226;color:#ffb4b4;font-weight:600}
+.dot{width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.item.dark .num{background:var(--red);color:#fff;font-size:12px}
 @media(prefers-reduced-motion:reduce){.pinbtn.flash{animation:none}#toast{transition:none}}
+/* ---------- PC layout: list on the left, map (or import screen) on the right ---------- */
+#pcBar,#pcHome{display:none}
+body.pc{--side:440px;--bar:64px}
+body.pc .top,body.pc #drivePanel,body.pc #recenter,body.pc .phoneOnly{display:none!important}
+body.pc #pcBar{display:flex;position:fixed;top:0;left:0;right:0;height:var(--bar);z-index:6;align-items:center;gap:18px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+#pcBar h1{margin:0;font-size:18px;white-space:nowrap}
+.pcStats{display:flex;gap:20px;flex:1;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden}
+.pcStats b{color:var(--ink);font-size:16px;font-variant-numeric:tabular-nums;margin-right:5px}
+body.pc #pcGear{width:44px;height:44px;box-shadow:none}
+.switch{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch span{width:46px;height:26px;border-radius:13px;background:#3a3f48;position:relative;transition:background .15s}
+.switch span::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+span{background:var(--green)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:2px solid var(--amber);outline-offset:2px}
+body.pc #reportPanel{top:var(--bar);left:0;right:auto;width:var(--side);height:auto;border-radius:0;border-top:0;border-right:1px solid var(--line);box-shadow:none;padding:14px 16px 0}
+body.pc #map{top:var(--bar);left:var(--side);width:calc(100% - var(--side));height:calc(100% - var(--bar))}
+body.pc:not(.mapOn) #map,body.pc:not(.mapOn) #mapMsg,body.pc:not(.mapOn) #placeBtn,body.pc:not(.mapOn) #darkBtn2,body.pc:not(.mapOn) #darkBar{display:none!important}
+body.pc #darkBar{left:calc(var(--side) + 20px);right:20px;top:calc(var(--bar) + 16px);max-width:640px}
+body.pc #mapMsg{left:calc(var(--side) + 20px);right:20px;top:calc(var(--bar) + 20px);max-width:640px}
+body.pc:not(.mapOn) #pcHome{display:grid}
+#pcHome{position:fixed;top:var(--bar);left:var(--side);right:0;bottom:0;place-items:center;padding:32px;overflow-y:auto}
+.home{width:100%;max-width:620px}
+.home h2{margin:0 0 6px;font-size:24px}
+.home>p{margin:0 0 20px;color:var(--mute)}
+.drop{border:2px dashed var(--line);border-radius:18px;padding:36px 24px;text-align:center;background:var(--panel);transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--amber);background:rgba(255,176,32,.07)}
+.drop svg{width:40px;height:40px;color:var(--amber)}
+.drop b{display:block;font-size:18px;margin:10px 0 4px}
+.drop p{margin:0 0 18px;color:var(--mute);font-size:15px}
+.summary{margin-top:20px;padding:14px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--line);color:var(--mute);font-size:15px}
+.summary b{color:var(--ink)}
+body.pc .modal{align-items:center}
+body.pc .card{border-radius:20px;padding:24px}
+body.pc .small:hover,body.pc .ghost:hover,body.pc .acts button:hover,body.pc .icon:hover{background:#343944}
+body.pc .primary:hover{filter:brightness(1.08)}
+body.pc .chip:hover{color:var(--ink)}
 </style>
 </head>
 <body class="drive">
@@ -103,6 +149,33 @@ body.report #recenter{bottom:calc(55vh + 12px)}
   <button id="gear" class="icon" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
 
+<header id="pcBar">
+  <h1>Streetlight Tracker</h1>
+  <div class="pcStats"><span><b id="pcMiles">0.0</b>miles covered</span><span><b id="pcOpen">0</b>open</span><span><b id="pcDone">0</b>reported</span><span><b id="pcDark">0</b>dark streets</span></div>
+  <label class="switch" title="Loading the map uses your Google Maps API quota"><input id="mapSw" type="checkbox"><span></span>Show map</label>
+  <button id="pcImport" class="small">Import backup</button>
+  <button id="pcGear" class="icon" aria-label="Settings"></button>
+</header>
+
+<main id="pcHome">
+  <div class="home">
+    <h2>Map is off</h2>
+    <p>Nothing loads from Google while the map is off, so no API usage is counted. Turn on <b>Show map</b> at the top to see your driven roads and pins.</p>
+    <div id="drop" class="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+      <b>Import your iPhone backup</b>
+      <p>On the iPhone, open Settings and tap Export backup. Drop the .json file anywhere on this window, or choose it.</p>
+      <button id="homeImport" class="primary">Choose backup file</button>
+    </div>
+    <div id="summary" class="summary"></div>
+    <div class="row">
+      <button id="homeCsv" class="ghost">Export pins (CSV)</button>
+      <button id="homeJson" class="ghost">Export backup</button>
+      <button id="homeCopy" class="ghost">Copy open list</button>
+    </div>
+  </div>
+</main>
+
 <button id="recenter" class="icon" aria-label="Follow my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 
 <section id="drivePanel" class="panel">
@@ -115,6 +188,7 @@ body.report #recenter{bottom:calc(55vh + 12px)}
     <button id="trackBtn" class="track">Start tracking</button>
     <button id="pinBtn" class="pinbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out</button>
   </div>
+  <button id="darkBtn" class="darkbtn">No streetlight on a street</button>
 </section>
 
 <section id="reportPanel" class="panel sheet" hidden>
@@ -123,8 +197,10 @@ body.report #recenter{bottom:calc(55vh + 12px)}
       <button class="chip on" data-f="open">Open <span id="cOpen">0</span></button>
       <button class="chip" data-f="done">Reported <span id="cDone">0</span></button>
       <button class="chip" data-f="all">All</button>
+      <button class="chip" data-f="dark">Dark streets <span id="cDark">0</span></button>
     </div>
     <button id="placeBtn" class="small">Add on map</button>
+    <button id="darkBtn2" class="small">No streetlight</button>
     <button id="copyAll" class="small">Copy list</button>
   </div>
   <ul id="list"></ul>
@@ -133,13 +209,13 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 <div id="settings" class="modal" hidden>
   <div class="card">
     <h2>Settings</h2>
-    <p id="setupMsg" hidden>To show Google Maps, paste a Google Maps API key below. It is saved only on this phone.</p>
+    <p id="setupMsg" hidden>To show Google Maps, paste a Google Maps API key below. It is saved only on this device.</p>
     <label for="keyIn">Google Maps API key</label>
     <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza...">
-    <p>Enable Maps JavaScript API and Geocoding API on the key. Roads API is only needed for snap to roads.</p>
+    <p>Enable Maps JavaScript API, Geocoding API and Routes API on the key. Routes API makes No streetlight lines follow the road. Roads API is only needed for snap to roads.</p>
     <div class="row"><button id="saveKey" class="primary">Save key and reload</button></div>
-    <label class="check"><input id="snapIn" type="checkbox"> Snap driven path to roads (Roads API)</label>
-    <p>Off: the green line follows raw GPS. On: it is matched to the road you drove, which looks cleaner.</p>
+    <label class="check phoneOnly"><input id="snapIn" type="checkbox"> Snap driven path to roads (Roads API)</label>
+    <p class="phoneOnly">Off: the green line follows raw GPS. On: it is matched to the road you drove, which looks cleaner.</p>
     <div class="hr"></div>
     <label>Backup</label>
     <p>Data lives in this browser only. Export now and then so nothing is lost.</p>
@@ -154,18 +230,25 @@ body.report #recenter{bottom:calc(55vh + 12px)}
     <div class="row">
       <button id="clrTrack" class="danger">Clear driven roads</button>
       <button id="clrPins" class="danger">Delete all pins</button>
+      <button id="clrDark" class="danger">Delete dark streets</button>
     </div>
     <div class="row" style="margin-top:22px"><button id="closeSet" class="ghost" style="width:100%">Done</button></div>
   </div>
 </div>
 
+<div id="darkBar" hidden><span id="darkTxt"></span><button id="darkCancel">Cancel</button></div>
 <div id="mapMsg" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 {
 const $ = id => document.getElementById(id);
-const LS = 'slt.data.v1', LSK = 'slt.key', LSSNAP = 'slt.snap', LSMODE = 'slt.mode', LSVIEW = 'slt.view', LSTRK = 'slt.tracking';
+const LS = 'slt.data.v1', LSK = 'slt.key', LSSNAP = 'slt.snap', LSMODE = 'slt.mode', LSVIEW = 'slt.view', LSTRK = 'slt.tracking', LSIMP = 'slt.imported';
+// PC = anything that is not a phone or tablet. iPadOS reports itself as a Mac, so touch points tell them apart.
+// Add ?pc or ?phone to the URL to force one layout.
+const UA = navigator.userAgent, QS = new URLSearchParams(location.search);
+const isPC = QS.has('pc') ? true : QS.has('phone') ? false
+  : !(/iPhone|iPad|iPod|Android|Mobile/i.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1));
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } }
@@ -185,6 +268,7 @@ let data = {segs: [], pins: [], nextN: 1};
 function validData(d){ return d && Array.isArray(d.segs) && Array.isArray(d.pins); }
 try { const d = JSON.parse(store.get(LS) || 'null'); if (validData(d)) data = d; } catch(e){}
 if (!data.nextN) data.nextN = data.pins.reduce((m,p) => Math.max(m, p.n || 0), 0) + 1;
+if (!Array.isArray(data.dark)) data.dark = []; // streets with no lights: {id, path:[[lat,lng]...], t, name, straight}
 let saveTimer = null, warnedSave = false;
 function save(now){
   clearTimeout(saveTimer);
@@ -202,22 +286,36 @@ function armed(btn, label, fn){ // two-tap confirm
   btn.dataset.armed = '1'; btn.textContent = 'Tap again to confirm';
   setTimeout(() => { if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; } }, 3500);
 }
+const darkMeters = () => data.dark.reduce((m, d) => m + segLen(d.path), 0);
 function updateStats(){
-  $('miles').textContent = (meters / 1609.344).toFixed(1);
+  // dark streets count as covered: you checked them without driving them
+  const miles = ((meters + darkMeters()) / 1609.344).toFixed(1);
+  $('miles').textContent = miles;
   const open = data.pins.filter(p => !p.done).length;
   $('openCount').textContent = open;
   $('cOpen').textContent = open;
   $('cDone').textContent = data.pins.length - open;
+  $('cDark').textContent = data.dark.length;
+  if (isPC){
+    const done = data.pins.length - open, imp = store.get(LSIMP);
+    $('pcMiles').textContent = miles; $('pcOpen').textContent = open; $('pcDone').textContent = done; $('pcDark').textContent = data.dark.length;
+    $('summary').innerHTML = (data.pins.length || data.segs.length || data.dark.length)
+      ? 'On this PC: <b>' + data.pins.length + ' pins</b> (' + open + ' open, ' + done + ' reported), <b>' + data.dark.length + ' dark streets</b> and <b>' + miles + ' miles</b> covered.' +
+        (imp && !isNaN(Date.parse(imp)) ? ' Backup made ' + esc(fmtT(Date.parse(imp))) + '.' : '')
+      : 'No data on this PC yet. Import a backup to see your pins.';
+  }
 }
 
 // ---------- state ----------
 let map = null, geocoder = null, meMarker = null, accCircle = null;
 let last = null, lastGood = null, lastKept = null, curSeg = null, tracking = false, follow = true, placing = false, firstFix = true;
-let mode = store.get(LSMODE) === 'report' ? 'report' : 'drive';
+let mode = isPC || store.get(LSMODE) === 'report' ? 'report' : 'drive';
+let scriptStarted = false, wantMap = false;
 let filter = 'open', selId = null, wake = null;
 let key = store.get(LSK) || '';
 let snapOn = store.get(LSSNAP) === '1', snapBusy = false, snapFailed = false;
-const lines = new Map(), markers = new Map();
+const lines = new Map(), markers = new Map(), darkLines = new Map();
+let darkStep = 0, darkA = null, darkMk = null; // 1 = waiting for start tap, 2 = waiting for end tap, 3 = finding the road
 
 // ---------- GPS ----------
 const MIN_MOVE = 6, MAX_ACC = 35, GAP_M = 250, GAP_S = 45;
@@ -326,12 +424,107 @@ function drawPin(p){
     markers.set(p.id, m);
   } else { m.position = {lat: p.lat, lng: p.lng}; m.content = pinEl(p); }
 }
+function drawDark(d){
+  if (!map) return;
+  let l = darkLines.get(d.id);
+  if (!l){
+    l = new google.maps.Polyline({map, strokeColor: '#ef4444', strokeOpacity: .9, zIndex: 2});
+    l.addListener('click', e => {
+      if (darkStep){ if (e.latLng) darkClick({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
+      if (mode !== 'report') setMode('report');
+      setFilter('dark'); select(d.id, false);
+    });
+    darkLines.set(d.id, l);
+  }
+  l.setPath(d.path.map(P)); l.setOptions({strokeWeight: d.id === selId ? 11 : 7});
+}
 function redrawAll(){
   if (!map) return;
   for (const l of lines.values()) l.setMap(null); lines.clear();
   for (const m of markers.values()) m.map = null; markers.clear();
-  data.segs.forEach(drawSeg); data.pins.forEach(drawPin);
+  for (const l of darkLines.values()) l.setMap(null); darkLines.clear();
+  data.segs.forEach(drawSeg); data.pins.forEach(drawPin); data.dark.forEach(drawDark);
 }
+
+// ---------- no streetlight (dark streets) ----------
+function decodePoly(s){ // Google encoded polyline -> [{lat,lng}]
+  const out = []; let i = 0, lat = 0, lng = 0;
+  while (i < s.length){
+    for (let k = 0; k < 2; k++){
+      let r = 0, sh = 0, c;
+      do { c = s.charCodeAt(i++) - 63; r |= (c & 31) << sh; sh += 5; } while (c >= 32);
+      const d = (r & 1) ? ~(r >> 1) : (r >> 1);
+      if (k === 0) lat += d; else lng += d;
+    }
+    out.push({lat: lat / 1e5, lng: lng / 1e5});
+  }
+  return out;
+}
+// Road path between two points. Walking directions so one-way streets don't send it around the block.
+async function routePath(a, b){
+  let err;
+  try {
+    const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'routes.polyline.encodedPolyline'},
+      body: JSON.stringify({origin: {location: {latLng: {latitude: a.lat, longitude: a.lng}}}, destination: {location: {latLng: {latitude: b.lat, longitude: b.lng}}}, travelMode: 'WALK'})
+    });
+    const j = await res.json();
+    if (!res.ok || j.error) throw new Error((j.error && j.error.message) || 'Routes API error');
+    const enc = j.routes && j.routes[0] && j.routes[0].polyline && j.routes[0].polyline.encodedPolyline;
+    if (!enc) throw new Error('No road found between those points');
+    return decodePoly(enc);
+  } catch(e){ err = e; }
+  try { // older keys may have the Directions API instead
+    const r = await new google.maps.DirectionsService().route({origin: a, destination: b, travelMode: google.maps.TravelMode.WALKING});
+    const p = r.routes[0].overview_path;
+    if (p && p.length) return p.map(q => ({lat: q.lat(), lng: q.lng()}));
+  } catch(e){}
+  throw err;
+}
+function darkBar(txt){ $('darkTxt').textContent = txt || ''; $('darkBar').hidden = !txt; }
+function startDark(){
+  if (!map){ toast(isPC ? 'Turn on Show map first' : 'Wait for the map to load'); return; }
+  if (darkStep){ endDark(); return; }
+  if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
+  darkStep = 1; darkA = null; follow = false; $('recenter').classList.add('show');
+  darkBar((isPC ? 'Click' : 'Tap') + ' the START of the street with no lights');
+}
+function endDark(){ darkStep = 0; darkA = null; if (darkMk){ darkMk.map = null; darkMk = null; } darkBar(''); }
+async function darkClick(ll){
+  if (darkStep === 1){
+    darkA = ll;
+    const dot = document.createElement('div'); dot.className = 'dot';
+    darkMk = new google.maps.marker.AdvancedMarkerElement({map, position: ll, content: dot, zIndex: 20});
+    darkStep = 2; darkBar('Now ' + (isPC ? 'click' : 'tap') + ' the END of the dark stretch');
+  } else if (darkStep === 2){
+    const a = darkA; darkStep = 3; darkBar('Finding the road...');
+    let path, straight = false;
+    try { path = await routePath(a, ll); }
+    catch(e){ path = [a, ll]; straight = true; toast('Could not follow the road (' + String(e.message).slice(0, 110) + '). Drew a straight line. Enable Routes API on your key.', 8000); }
+    const d = {id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), path: path.map(q => [r6(q.lat), r6(q.lng)]), t: Date.now(), name: '', straight};
+    data.dark.push(d); endDark(); save(true); drawDark(d); renderList(); nameDark(d);
+    if (!straight){
+      const len = segLen(d.path);
+      toast(len > dist(a, ll) * 3 + 200 ? 'The road took a long way around. Check the red line and delete it if wrong.' : 'Dark street added (' + (len / 1609.344).toFixed(2) + ' mi)', 5000);
+    }
+  }
+}
+function nameDark(d){ // street name from the middle of the stretch
+  if (!geocoder || !d.path.length) return;
+  geocoder.geocode({location: P(d.path[Math.floor(d.path.length / 2)])}).then(({results}) => {
+    const r = results.find(x => x.types.includes('route')) || results[0];
+    d.name = r ? r.formatted_address : ''; save(true); renderList();
+  }).catch(() => {});
+}
+const darkNum = d => data.dark.indexOf(d) + 1;
+function darkText(d){
+  return 'No streetlights ' + darkNum(d) + ': ' + (d.name ? 'near ' + d.name : 'street') + ' (' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi)' +
+    '\nFrom: ' + gmUrl(P(d.path[0])) + '\nTo: ' + gmUrl(P(d.path[d.path.length - 1]));
+}
+$('darkBtn').addEventListener('click', startDark);
+$('darkBtn2').addEventListener('click', startDark);
+$('darkCancel').addEventListener('click', endDark);
 
 // ---------- pins ----------
 function addPin(lat, lng){
@@ -357,15 +550,16 @@ function renderList(){
   const ae = document.activeElement;
   if (ae && ae.classList && ae.classList.contains('note')){ renderPending = true; return; }
   renderPending = false;
+  if (filter === 'dark'){ renderDark(); return; }
   const ps = visiblePins();
   if (!ps.length){
-    $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : 'No pins yet. In Driving mode, tap Light out when you pass a dark streetlight.') + '</li>';
+    $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : isPC ? 'No pins yet. Import a backup from your iPhone.' : 'No pins yet. In Driving mode, tap Light out when you pass a dark streetlight.') + '</li>';
     return;
   }
   $('list').innerHTML = ps.map(p => {
     const addr = p.addr ? '<div class="addr" data-a="go">Near ' + esc(p.addr) + '</div>'
       : p.addrErr ? '<div class="addr pending" data-a="go">Address lookup failed. <button data-a="retry" style="color:var(--amber);font-weight:600">Retry</button></div>'
-      : '<div class="addr pending" data-a="go">Looking up address...</div>';
+      : '<div class="addr pending" data-a="go">' + (isPC && !geocoder ? 'No address yet. Turn on the map to look it up.' : 'Looking up address...') + '</div>';
     return '<li class="item' + (p.done ? ' done' : '') + (p.id === selId ? ' hl' : '') + '" data-id="' + esc(p.id) + '">' +
       '<div class="num">' + esc(p.n) + '</div><div>' + addr +
       '<div class="meta">' + esc(fmtT(p.t)) + ' · ' + esc(p.lat.toFixed(5)) + ', ' + esc(p.lng.toFixed(5)) + (p.done ? ' · Reported' : '') + '</div>' +
@@ -373,6 +567,21 @@ function renderList(){
       '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(p)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
       '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark reported') + '</button>' +
       '<button data-a="del" class="del">Delete</button></div></div></li>';
+  }).join('');
+}
+function renderDark(){
+  if (!data.dark.length){
+    $('list').innerHTML = '<li class="empty">No dark streets yet. Use No streetlight, then ' + (isPC ? 'click' : 'tap') + ' the start and end of the street on the map.</li>';
+    return;
+  }
+  $('list').innerHTML = data.dark.slice().sort((a, b) => b.t - a.t).map(d => {
+    const mid = P(d.path[Math.floor(d.path.length / 2)]);
+    return '<li class="item dark' + (d.id === selId ? ' hl' : '') + '" data-dark="' + esc(d.id) + '">' +
+      '<div class="num">S' + darkNum(d) + '</div><div>' +
+      '<div class="addr" data-a="go">' + (d.name ? 'Near ' + esc(d.name) : 'Street with no lights') + '</div>' +
+      '<div class="meta">' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi · ' + esc(fmtT(d.t)) + (d.straight ? ' · straight line, not road' : '') + '</div>' +
+      '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(mid)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
+      '<button data-a="go">Show on map</button><button data-a="copy">Copy</button><button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
 function pinText(p){ return '#' + p.n + ': ' + (p.addr ? 'Near ' + p.addr : p.lat + ', ' + p.lng) + (p.note ? '\nNote: ' + p.note : '') + '\n' + gmUrl(p); }
@@ -383,15 +592,33 @@ async function copyText(txt){
   toast(ok ? 'Copied' : 'Copy failed on this browser');
 }
 function select(id, pan){
-  selId = id; const p = data.pins.find(x => x.id === id); if (!p) return;
-  data.pins.forEach(drawPin);
-  if (pan && map){ follow = false; $('recenter').classList.add('show'); map.panTo({lat: p.lat, lng: p.lng}); if (map.getZoom() < 17) map.setZoom(18); }
+  const p = data.pins.find(x => x.id === id), d = !p && data.dark.find(x => x.id === id); if (!p && !d) return;
+  selId = id;
+  data.pins.forEach(drawPin); data.dark.forEach(drawDark);
+  if (pan && map){
+    follow = false; $('recenter').classList.add('show');
+    if (p){ map.panTo({lat: p.lat, lng: p.lng}); if (map.getZoom() < 17) map.setZoom(18); }
+    else { const b = new google.maps.LatLngBounds(); d.path.forEach(q => b.extend(P(q))); map.fitBounds(b, fitPad()); }
+  }
   renderList();
-  const li = document.querySelector('.item[data-id="' + CSS.escape(id) + '"]'); if (li) li.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  const li = document.querySelector(p ? '.item[data-id="' + CSS.escape(id) + '"]' : '.item[data-dark="' + CSS.escape(id) + '"]');
+  if (li) li.scrollIntoView({block: 'nearest', behavior: 'smooth'});
 }
 
 $('list').addEventListener('click', e => {
   const li = e.target.closest('.item'); if (!li) return;
+  if (li.dataset.dark){
+    const d = data.dark.find(x => x.id === li.dataset.dark); if (!d) return;
+    const a = e.target.closest('[data-a]'), act = a && a.dataset.a;
+    if (act === 'go') select(d.id, true);
+    else if (act === 'copy') copyText(darkText(d));
+    else if (act === 'del') armed(a, 'Delete', () => {
+      const n = darkNum(d); data.dark = data.dark.filter(x => x !== d);
+      const l = darkLines.get(d.id); if (l){ l.setMap(null); darkLines.delete(d.id); }
+      save(true); renderList(); toast('Deleted dark street S' + n);
+    });
+    return;
+  }
   const p = data.pins.find(x => x.id === li.dataset.id); if (!p) return;
   const a = e.target.closest('[data-a]'); const act = a && a.dataset.a;
   if (act === 'retry'){ e.stopPropagation(); geocode(p); }
@@ -416,32 +643,43 @@ $('pinBtn').addEventListener('click', () => {
 });
 $('trackBtn').addEventListener('click', () => setTracking(!tracking));
 $('recenter').addEventListener('click', () => { follow = true; $('recenter').classList.remove('show'); if (last && map){ map.panTo(last); if (map.getZoom() < 15) map.setZoom(17); } });
-document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
-  filter = c.dataset.f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); renderList();
-}));
+function setFilter(f){ filter = f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x.dataset.f === f)); renderList(); }
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setFilter(c.dataset.f)));
 $('placeBtn').addEventListener('click', () => {
+  if (darkStep) endDark();
   placing = !placing; $('placeBtn').textContent = placing ? 'Cancel' : 'Add on map';
   if (placing) toast('Tap the map where the light is', 3500);
 });
 $('copyAll').addEventListener('click', () => {
+  if (filter === 'dark'){
+    if (!data.dark.length){ toast('Nothing to copy'); return; }
+    copyText('Streets with no lights (' + data.dark.length + ')\n\n' + data.dark.map(darkText).join('\n\n')); return;
+  }
   const ps = visiblePins(); if (!ps.length){ toast('Nothing to copy'); return; }
   copyText('Streetlights out (' + ps.length + ')\n\n' + ps.slice().sort((a, b) => a.n - b.n).map(pinText).join('\n\n'));
 });
+const fitPad = () => isPC ? 60 : {top: 90, left: 40, right: 40, bottom: Math.round(window.innerHeight * .55) + 20};
+function fitView(){ // frame the pins and dark streets (on PC also the driven roads)
+  if (!map) return;
+  const pts = data.pins.map(p => ({lat: p.lat, lng: p.lng}));
+  data.dark.forEach(d => d.path.forEach(a => pts.push(P(a))));
+  if (isPC) data.segs.forEach(s => s.raw.forEach(a => pts.push(P(a))));
+  if (!pts.length) return;
+  follow = false; $('recenter').classList.add('show');
+  const b = new google.maps.LatLngBounds(); pts.forEach(q => b.extend(q));
+  if (pts.length === 1){ map.setCenter(b.getCenter()); map.setZoom(17); }
+  else map.fitBounds(b, fitPad());
+}
 function setMode(m){
-  mode = m; store.set(LSMODE, m);
-  document.body.className = m;
+  mode = m; if (!isPC) store.set(LSMODE, m);
+  document.body.classList.remove('drive', 'report'); document.body.classList.add(m);
   $('tabDrive').classList.toggle('on', m === 'drive'); $('tabReport').classList.toggle('on', m === 'report');
   $('drivePanel').hidden = m !== 'drive'; $('reportPanel').hidden = m !== 'report';
   if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
   for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
   if (m === 'report'){
     renderList();
-    if (map && data.pins.length && !selId){
-      follow = false; $('recenter').classList.add('show');
-      const b = new google.maps.LatLngBounds(); data.pins.forEach(p => b.extend({lat: p.lat, lng: p.lng}));
-      if (data.pins.length === 1){ map.setCenter(b.getCenter()); map.setZoom(17); }
-      else map.fitBounds(b, {top: 90, left: 40, right: 40, bottom: Math.round(window.innerHeight * .55) + 20});
-    }
+    if (!selId) fitView();
   } else { follow = true; $('recenter').classList.remove('show'); if (last && map) map.panTo(last); }
 }
 $('tabDrive').addEventListener('click', () => setMode('drive'));
@@ -454,7 +692,17 @@ $('closeSet').addEventListener('click', () => { $('settings').hidden = true; });
 $('settings').addEventListener('click', e => { if (e.target.id === 'settings') $('settings').hidden = true; });
 $('saveKey').addEventListener('click', () => {
   const k = $('keyIn').value.trim(); if (!k){ toast('Paste a key first'); return; }
-  store.set(LSK, k); save(true); location.reload();
+  store.set(LSK, k); save(true);
+  if (isPC && !scriptStarted){ // map not loaded yet, so no reload needed
+    key = k; $('settings').hidden = true; toast('Key saved');
+    if (wantMap){ $('mapSw').checked = true; setMapOn(true); }
+    return;
+  }
+  location.reload();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('settings').hidden) $('settings').hidden = true; else if (darkStep) endDark();
 });
 $('snapIn').addEventListener('change', e => { snapOn = e.target.checked; snapFailed = false; store.set(LSSNAP, snapOn ? '1' : '0'); if (snapOn && curSeg) maybeSnap(curSeg, false); });
 function download(name, text, type){
@@ -466,24 +714,33 @@ $('expJson').addEventListener('click', () => download('streetlights-backup-' + s
 $('expCsv').addEventListener('click', () => {
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
   const rows = [['Number', 'Status', 'Address', 'Latitude', 'Longitude', 'Pinned', 'Note', 'Google Maps']].concat(
-    data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]));
+    data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]),
+    data.dark.map(d => { const s = d.path[0], e = d.path[d.path.length - 1];
+      return ['S' + darkNum(d), 'No streetlights (street)', d.name, s[0], s[1], new Date(d.t).toLocaleString(), 'Ends at ' + e[0] + ', ' + e[1] + ' · ' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', gmUrl(P(s))]; }));
   download('streetlights-' + stamp() + '.csv', rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv');
 });
 $('impBtn').addEventListener('click', () => $('impFile').click());
-$('impFile').addEventListener('change', e => {
-  const f = e.target.files && e.target.files[0]; if (!f) return;
+function importFile(f){
+  if (!f) return;
   f.text().then(t => {
     const d = JSON.parse(t); if (!validData(d)) throw new Error('bad');
-    data = {segs: d.segs, pins: d.pins, nextN: d.nextN || d.pins.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1};
-    meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0); curSeg = null; lastKept = null;
-    save(true); redrawAll(); renderList(); toast('Backup imported');
-  }).catch(() => toast('That file is not a Streetlight Tracker backup')).finally(() => { e.target.value = ''; });
-});
+    data = {segs: d.segs, pins: d.pins, dark: Array.isArray(d.dark) ? d.dark : [], nextN: d.nextN || d.pins.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1};
+    endDark();
+    meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0); curSeg = null; lastKept = null; selId = null;
+    store.set(LSIMP, d.exported || new Date().toISOString());
+    save(true); redrawAll(); renderList(); if (isPC) fitView();
+    toast('Imported ' + data.pins.length + ' pins');
+  }).catch(() => toast('That file is not a Streetlight Tracker backup'));
+}
+$('impFile').addEventListener('change', e => { importFile(e.target.files && e.target.files[0]); e.target.value = ''; });
 $('clrTrack').addEventListener('click', e => armed(e.currentTarget, 'Clear driven roads', () => {
   data.segs = []; curSeg = null; lastKept = null; meters = 0; save(true); redrawAll(); updateStats(); toast('Driven roads cleared');
 }));
 $('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete all pins', () => {
   data.pins = []; data.nextN = 1; selId = null; save(true); redrawAll(); renderList(); toast('All pins deleted');
+}));
+$('clrDark').addEventListener('click', e => armed(e.currentTarget, 'Delete dark streets', () => {
+  data.dark = []; selId = null; endDark(); save(true); redrawAll(); renderList(); toast('Dark streets deleted');
 }));
 
 // ---------- Google Maps ----------
@@ -529,6 +786,7 @@ function setupMap(){
   map.addListener('dragstart', () => { follow = false; $('recenter').classList.add('show'); });
   map.addListener('idle', () => { const c = map.getCenter(); if (c) store.set(LSVIEW, JSON.stringify({c: {lat: c.lat(), lng: c.lng()}, z: map.getZoom()})); });
   map.addListener('click', e => {
+    if (darkStep){ if (e.latLng) darkClick({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (!placing || !e.latLng) return;
     placing = false; $('placeBtn').textContent = 'Add on map';
     const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Pinned light #' + p.n + '. Drag it to adjust.');
@@ -536,9 +794,11 @@ function setupMap(){
   redrawAll();
   if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(17); } }
   data.pins.filter(p => !p.addr).forEach(geocode);
+  data.dark.filter(d => !d.name).forEach(nameDark);
   if (mode === 'report') setMode('report');
 }
 function loadMaps(){
+  if (scriptStarted) return; scriptStarted = true;
   const s = document.createElement('script');
   s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&v=weekly&libraries=marker&loading=async&callback=__initMap';
   s.async = true;
@@ -554,13 +814,52 @@ function loadMaps(){
   }, 12000);
 }
 
+// ---------- PC ----------
+// The map only loads when Show map is switched on. Switching it off just hides it: the loaded
+// map is kept, so turning it back on later costs no extra map load.
+function setMapOn(on){
+  if (on && !key){ $('mapSw').checked = false; wantMap = true; openSettings(true); return; }
+  document.body.classList.toggle('mapOn', on);
+  if (!on) endDark();
+  if (on){ if (!scriptStarted){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else fitView(); }
+}
+if (isPC){
+  document.body.classList.add('pc');
+  $('pcGear').innerHTML = $('gear').innerHTML;
+  $('pcGear').addEventListener('click', () => openSettings(!key));
+  $('mapSw').addEventListener('change', e => setMapOn(e.target.checked));
+  $('pcImport').addEventListener('click', () => $('impFile').click());
+  $('homeImport').addEventListener('click', () => $('impFile').click());
+  $('homeCsv').addEventListener('click', () => $('expCsv').click());
+  $('homeJson').addEventListener('click', () => $('expJson').click());
+  $('homeCopy').addEventListener('click', () => {
+    const ps = data.pins.filter(p => !p.done).sort((a, b) => a.n - b.n); if (!ps.length && !data.dark.length){ toast('Nothing to copy'); return; }
+    const parts = [];
+    if (ps.length) parts.push('Streetlights out (' + ps.length + ')\n\n' + ps.map(pinText).join('\n\n'));
+    if (data.dark.length) parts.push('Streets with no lights (' + data.dark.length + ')\n\n' + data.dark.map(darkText).join('\n\n'));
+    copyText(parts.join('\n\n\n'));
+  });
+  const dz = $('drop'); let depth = 0; // drop a backup file anywhere on the window
+  window.addEventListener('dragenter', e => { e.preventDefault(); depth++; dz.classList.add('over'); });
+  window.addEventListener('dragleave', () => { if (--depth <= 0){ depth = 0; dz.classList.remove('over'); } });
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => { e.preventDefault(); depth = 0; dz.classList.remove('over'); importFile(e.dataTransfer.files && e.dataTransfer.files[0]); });
+}
+
 // ---------- start ----------
 setMode(mode);
 updateStats();
 renderList();
-if (key){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else openSettings(true);
-startWatch();
-if (store.get(LSTRK) === '1') setTracking(true);
+if (!isPC){
+  if (key){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else openSettings(true);
+  startWatch();
+  if (store.get(LSTRK) === '1') setTracking(true);
+}
+{ // say which device this was recognised as, for 5 seconds
+  const name = isPC ? (/Mac/.test(UA) ? 'Mac' : /Windows/.test(UA) ? 'Windows PC' : 'computer')
+    : /iPhone/.test(UA) ? 'iPhone' : /iPad|Macintosh/.test(UA) ? 'iPad' : /Android/.test(UA) ? 'Android device' : 'phone';
+  toast('Device: ' + name + (isPC ? '. Using the PC layout.' : '. Using the phone layout.'), 5000);
+}
 window.addEventListener('pagehide', () => save(true));
 }
 </script>
