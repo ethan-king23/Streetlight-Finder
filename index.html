@@ -330,7 +330,13 @@ const P = a => ({lat: a[0], lng: a[1]});
 let data = {segs: [], pins: [], nextN: 1};
 function validData(d){ return d && Array.isArray(d.segs) && Array.isArray(d.pins); }
 try { const d = JSON.parse(store.get(LS) || 'null'); if (validData(d)) data = d; } catch(e){}
-if (!data.nextN) data.nextN = data.pins.reduce((m,p) => Math.max(m, p.n || 0), 0) + 1;
+// Pins are always numbered 1..N with no gaps, in the order they were added. Deleting one moves the
+// later ones down (old #6 becomes #5), and after deleting every pin the next one is #1 again.
+function renumberPins(){
+  data.pins.sort((a, b) => (a.n || 0) - (b.n || 0) || a.t - b.t).forEach((p, i) => { p.n = i + 1; });
+  data.nextN = data.pins.length + 1;
+}
+renumberPins(); // also fixes gaps left in data saved by older versions
 if (!Array.isArray(data.dark)) data.dark = []; // streets with no lights: {id, path:[[lat,lng]...], t, name, straight}
 if (!Array.isArray(data.turns)) data.turns = []; // turnaround spots: {id, lat, lng, t}
 let saveTimer = null, warnedSave = false;
@@ -825,7 +831,14 @@ $('list').addEventListener('click', e => {
   else if (act === 'go') select(p.id, true);
   else if (act === 'copy') copyText(pinText(p));
   else if (act === 'done'){ p.done = !p.done; save(true); drawPin(p); renderList(); toast(p.done ? 'Marked #' + p.n + ' reported' : 'Reopened #' + p.n); }
-  else if (act === 'del') armed(a, 'Delete', () => { data.pins = data.pins.filter(x => x !== p); const m = markers.get(p.id); if (m){ m.map = null; markers.delete(p.id); } save(true); renderList(); toast('Deleted #' + p.n); });
+  else if (act === 'del') armed(a, 'Delete', () => {
+    const n = p.n, later = data.pins.some(x => x.n > n);
+    data.pins = data.pins.filter(x => x !== p);
+    const m = markers.get(p.id); if (m){ m.map = null; markers.delete(p.id); }
+    if (selId === p.id) selId = null;
+    renumberPins(); data.pins.forEach(drawPin); // markers show the new numbers
+    save(true); renderList(); toast('Deleted #' + n + (later ? '. Later pins moved down one number.' : ''));
+  });
 });
 $('list').addEventListener('input', e => {
   if (!e.target.classList.contains('note')) return;
@@ -945,8 +958,8 @@ $('expCsv').addEventListener('click', () => {
 });
 $('impBtn').addEventListener('click', () => $('impFile').click());
 function useData(d){ // replace everything in memory with d (a backup, or data saved by the other window)
-  data = {segs: d.segs, pins: d.pins, dark: Array.isArray(d.dark) ? d.dark : [], turns: Array.isArray(d.turns) ? d.turns : [],
-    nextN: d.nextN || d.pins.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1};
+  data = {segs: d.segs, pins: d.pins, dark: Array.isArray(d.dark) ? d.dark : [], turns: Array.isArray(d.turns) ? d.turns : [], nextN: 1};
+  renumberPins();
   endDark(); closeMenu();
   meters = data.segs.reduce((m, s) => m + segLen(s.raw), 0); curSeg = null; lastKept = null; selId = null;
   redrawAll(); renderList();
