@@ -104,9 +104,18 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 #turnBtn2{color:#7dd3fc}
 #darkBar.turn{background:#0f2a38;border-color:#38bdf8}
 #darkBar.turn button{background:#16384a;color:#bfe9ff}
-/* turnaround marker: small round U-turn icon */
-.turn{width:30px;height:30px;border-radius:50%;background:#38bdf8;border:2px solid #fff;display:grid;place-items:center;color:#06263a;box-shadow:0 1px 5px rgba(0,0,0,.5)}
-.turn svg{width:18px;height:18px}
+/* turnaround marker: one image (circle + U-turn arrow) so iPhone Safari paints it right away */
+.turnmk{display:block;width:32px;height:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+/* PC: tools floating over the map */
+#mapTools{display:none}
+body.pc.mapOn #mapTools{display:flex;position:fixed;top:calc(var(--bar) + 14px);left:calc(var(--side) + 14px);z-index:5;gap:8px}
+#mapTools button{min-height:44px;padding:0 14px;border-radius:12px;background:rgba(20,22,26,.94);border:1px solid var(--line);font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px}
+#mapTools button:hover{background:#2a2e36}
+#mapTools svg{width:20px;height:20px;flex:none}
+#toolPin{color:var(--amber)}
+#toolDark{color:#ff9b9b;border-color:#5a2a2e!important}
+#toolTurn{color:#7dd3fc;border-color:#1d4a60!important}
+body.pc #placeBtn,body.pc #darkBtn2,body.pc #turnBtn2{display:none!important} /* the map toolbar replaces these on PC */
 /* action menu (tap a red line or a turnaround) */
 .menuBtns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .menuBtns button{min-height:52px;border-radius:12px;background:#2a2e36;font-weight:600;font-size:16px;text-align:left;padding:0 16px}
@@ -145,7 +154,8 @@ body.pc #map{top:var(--bar);left:var(--side);width:calc(100% - var(--side));heig
 body.pc:not(.mapOn) #map,body.pc:not(.mapOn) #mapMsg{display:none!important}
 /* tools that change the map only work while it is live */
 body.pc:not(.mapLive) #placeBtn,body.pc:not(.mapLive) #darkBtn2,body.pc:not(.mapLive) #turnBtn2,body.pc:not(.mapLive) #darkBar{display:none!important}
-body.pc #darkBar{left:calc(var(--side) + 20px);right:20px;top:calc(var(--bar) + 16px);max-width:640px}
+body.pc #darkBar{left:calc(var(--side) + 14px);right:20px;top:calc(var(--bar) + 70px);max-width:640px}
+body.pc.mapOn:not(.mapLive) #freeze span{top:auto;bottom:16px}
 body.pc #mapMsg{left:calc(var(--side) + 20px);right:20px;top:calc(var(--bar) + 20px);max-width:640px}
 body.pc:not(.mapOn) #pcHome{display:grid}
 #pcHome{position:fixed;top:var(--bar);left:var(--side);right:0;bottom:0;place-items:center;padding:32px;overflow-y:auto}
@@ -219,7 +229,7 @@ body.pc .chip:hover{color:var(--ink)}
   </div>
   <div class="darkRow">
     <button id="darkBtn" class="darkbtn">No streetlight on a street</button>
-    <button id="turnBtn" class="turnbtn" aria-label="Mark a turnaround spot" title="Mark a turnaround spot"></button>
+    <button id="turnBtn" class="turnbtn" aria-label="Mark a turnaround spot" title="Mark a turnaround spot"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg></button>
   </div>
 </section>
 
@@ -270,7 +280,12 @@ body.pc .chip:hover{color:var(--ink)}
   </div>
 </div>
 
-<div id="freeze"><span>Snapshot. Press Update Map to move or edit.</span></div>
+<div id="freeze"><span>Snapshot. Press Update Map to move the map.</span></div>
+<div id="mapTools">
+  <button id="toolPin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out pin</button>
+  <button id="toolDark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg>No streetlight</button>
+  <button id="toolTurn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg>Turnaround</button>
+</div>
 <div id="darkBar" hidden><span id="darkTxt"></span><button id="barHere" hidden>Use my location</button><button id="darkCancel">Cancel</button></div>
 <div id="menu" class="modal" hidden>
   <div class="card"><h2 id="menuTitle"></h2><p id="menuSub"></p><div id="menuBtns" class="menuBtns"></div></div>
@@ -511,12 +526,17 @@ function drawDark(d){
   }
   l.setPath(d.path.map(P)); l.setOptions({strokeWeight: d.id === selId ? 11 : 7});
 }
-const TURN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg>';
+// Turnaround marker drawn as one image. iPhone Safari sometimes doesn't paint inline SVG on top of
+// the map until the screen is touched; an image avoids that.
+const TURN_IMG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">' +
+  '<circle cx="16" cy="16" r="14" fill="#38bdf8" stroke="#fff" stroke-width="2.5"/>' +
+  '<g transform="translate(6 6) scale(.8333)" fill="none" stroke="#06263a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></g></svg>');
 function drawTurn(t){
   if (!map) return;
   let m = turnMarks.get(t.id);
   if (!m){
-    const el = document.createElement('div'); el.className = 'turn'; el.innerHTML = TURN_SVG;
+    const el = document.createElement('img'); el.className = 'turnmk'; el.src = TURN_IMG; el.width = 32; el.height = 32; el.alt = 'Turnaround';
     m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: t.lat, lng: t.lng}, content: el, title: 'Turn around here', gmpDraggable: mode === 'report', zIndex: 9});
     m.addListener('click', () => { if (darkStep || pickTurn) return; openTurnMenu(t); });
     m.addListener('dragend', () => { const q = llOf(m.position); t.lat = r6(q.lat); t.lng = r6(q.lng); save(true); toast('Turnaround moved'); });
@@ -686,7 +706,6 @@ function openTurnMenu(t){
     }}
   ]);
 }
-$('turnBtn').innerHTML = TURN_SVG;
 $('turnBtn').addEventListener('click', () => startTurn());
 $('turnBtn2').addEventListener('click', () => startTurn());
 $('barHere').addEventListener('click', () => {
@@ -1069,6 +1088,19 @@ if (isPC){
   $('pcGear').innerHTML = $('gear').innerHTML;
   $('pcGear').addEventListener('click', () => openSettings(!key));
   $('mapBtn').addEventListener('click', () => setLive(!live));
+  // Map toolbar. Using a tool on a frozen map unfreezes it first (same map, no new map load).
+  const tool = fn => () => {
+    if (!map){ toast('Wait for the map to load'); return; }
+    if (!live){ setLive(true); toast('Map updating again', 1500); }
+    fn();
+  };
+  $('toolPin').addEventListener('click', tool(() => {
+    if (darkStep || pickTurn) endDark();
+    placing = !placing; $('placeBtn').textContent = placing ? 'Cancel' : 'Add on map';
+    if (placing) toast('Click the map where the light is', 3500);
+  }));
+  $('toolDark').addEventListener('click', tool(startDark));
+  $('toolTurn').addEventListener('click', tool(() => startTurn()));
   $('pcImport').addEventListener('click', () => $('impFile').click());
   $('homeImport').addEventListener('click', () => $('impFile').click());
   $('homeCsv').addEventListener('click', () => $('expCsv').click());
