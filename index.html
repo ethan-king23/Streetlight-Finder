@@ -22,11 +22,15 @@ button{cursor:pointer;border:0;background:none}
 button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 /* Google Maps sets an inline position:relative on the map div, which would collapse it to 0px tall; !important keeps it full screen */
 #map{position:fixed!important;top:0;left:0;width:100%;height:100%;background:#1d2026}
-.top{position:fixed;left:0;right:0;top:0;padding:calc(var(--st) + 10px) 12px 10px;display:flex;gap:10px;align-items:center;z-index:5;pointer-events:none}
+/* Top two rows share one grid: [Driving][Reporting]([gear]) over [Start Tracking][Start Map], 8px gaps,
+   so each button sits exactly over the one below it */
+.top{position:fixed;left:0;right:0;top:0;padding:calc(var(--st) + 10px) 12px 0;display:grid;grid-template-columns:1fr 52px;gap:8px;align-items:stretch;z-index:5;pointer-events:none}
+body.drive:not(.pc) .top{grid-template-columns:1fr}
 .top>*{pointer-events:auto}
-.seg{flex:1;display:flex;background:rgba(20,22,26,.92);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
-.seg button{flex:1;min-height:42px;border-radius:10px;font-weight:600;color:var(--mute)}
-.seg button.on{background:var(--ink);color:var(--bg)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{height:48px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);box-shadow:0 4px 18px rgba(0,0,0,.35);font-weight:600;font-size:15px;color:var(--mute)}
+.seg button.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.top .icon{height:48px}
 .icon{width:52px;height:52px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 .icon svg{width:24px;height:24px}
 #recenter{position:fixed;right:12px;z-index:5;display:none}
@@ -40,11 +44,12 @@ body.report #recenter{bottom:calc(var(--sheetH, 55vh) + 12px)}
 .stats span{font-size:13px;color:var(--mute)}
 .driveRow{display:flex;gap:12px;align-items:stretch}
 /* second row at the top (phone): Start tracking and Start Map */
-.top2{position:fixed;left:12px;right:12px;top:calc(var(--st) + 72px);z-index:5;display:flex;gap:8px;pointer-events:none}
+.top2{position:fixed;left:12px;right:12px;top:calc(var(--st) + 66px);z-index:5;display:grid;grid-template-columns:1fr 1fr;gap:8px;pointer-events:none}
+body.report .top2{grid-template-columns:1fr 1fr 52px} /* Start Map lines up under Driving */
 .top2>*{pointer-events:auto}
 body.report #trackBtn{display:none}
 /* the two phone buttons share one look: same size and dark glass as the tabs, a colored icon, and a tint when on */
-.top2 button{flex:1;max-width:calc(50% - 4px);height:48px;min-height:48px;margin:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;line-height:1;padding:0 12px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
+.top2 button{width:100%;height:48px;min-height:48px;margin:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;line-height:1;padding:0 12px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
 .top2 .ic{width:18px;height:18px;flex:none}
 .top2 .dot{width:10px;height:10px;border-radius:50%;background:#7b818b;flex:none}
 #trackBtn.on{background:rgba(20,83,45,.94);border-color:#22c55e;color:#dcfce7}
@@ -76,9 +81,18 @@ body.report #trackBtn{display:none}
 .sheet.min .sheetSum{display:block}
 .sheet.min .sheetHead,.sheet.min #list{display:none}
 body.pc .grab{display:none}
-.sheetHead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.filters{display:flex;gap:6px;flex:1 1 auto}
-.chip{min-height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--line);color:var(--mute);font-size:15px;white-space:nowrap}
+/* Reporting header: a row of four equal action buttons, then the filters, which wrap instead of overlapping */
+.sheetHead{display:flex;flex-direction:column;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.acts4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tool{min-height:56px;padding:6px 2px;border-radius:12px;background:#2a2e36;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;line-height:1.15;text-align:center}
+.tool svg{width:20px;height:20px;flex:none}
+#placeBtn{color:var(--amber)}
+#copyAll{color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);color:var(--mute);font-size:14px;white-space:nowrap}
+body.pc .sheetHead{flex-direction:column-reverse}
+body.pc .acts4{display:flex;justify-content:flex-start}
+body.pc .tool{flex-direction:row;min-height:40px;padding:0 14px;font-size:15px;gap:8px}
 .chip.on{border-color:var(--amber);color:var(--amber)}
 .small{min-height:40px;padding:0 12px;border-radius:10px;background:#2a2e36;font-size:15px;font-weight:600;white-space:nowrap}
 #list{list-style:none;margin:0;padding:0 0 calc(var(--sb) + 14px);overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
@@ -233,8 +247,8 @@ body.pc .chip:hover{color:var(--ink)}
   <h1>Streetlight Tracker</h1>
   <div class="pcStats"><span><b id="pcMiles">0.0</b>miles covered</span><span><b id="pcOpen">0</b>open</span><span><b id="pcDone">0</b>reported</span><span><b id="pcDark">0</b>dark streets</span></div>
   <button id="mapBtn" class="mapbtn" title="Start Map uses your Google Maps API. Stop Map freezes the map as it is.">Start Map</button>
-  <button id="pcPhone" class="small">iPhone view</button>
-  <button id="pcImport" class="small">Import backup</button>
+  <button id="pcPhone" class="small">iPhone View</button>
+  <button id="pcImport" class="small">Import Backup</button>
   <button id="pcGear" class="icon" aria-label="Settings"></button>
 </header>
 
@@ -245,14 +259,14 @@ body.pc .chip:hover{color:var(--ink)}
     <div id="drop" class="drop">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
       <b>Import your iPhone backup</b>
-      <p>On the iPhone, open Settings and tap Export backup. Drop the .json file anywhere on this window, or choose it.</p>
-      <button id="homeImport" class="primary">Choose backup file</button>
+      <p>On the iPhone, open Settings and tap Export Backup. Drop the .json file anywhere on this window, or choose it.</p>
+      <button id="homeImport" class="primary">Choose Backup File</button>
     </div>
     <div id="summary" class="summary"></div>
     <div class="row">
-      <button id="homeCsv" class="ghost">Export pins (CSV)</button>
-      <button id="homeJson" class="ghost">Export backup</button>
-      <button id="homeCopy" class="ghost">Copy open list</button>
+      <button id="homeCsv" class="ghost">Export Pins (CSV)</button>
+      <button id="homeJson" class="ghost">Export Backup</button>
+      <button id="homeCopy" class="ghost">Copy Open List</button>
     </div>
   </div>
 </main>
@@ -261,7 +275,7 @@ body.pc .chip:hover{color:var(--ink)}
   <button id="trackBtn"><span class="dot"></span><span class="lbl">Start Tracking</span></button>
   <button id="phoneMapBtn" class="mapbtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg><span class="lbl">Start Map</span></button>
 </div>
-<div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start Tracking also starts the map. Light out pins still work with the map off.</div>
+<div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start Tracking also starts the map. LEFT and RIGHT still work with the map off.</div>
 
 <button id="recenter" class="icon" aria-label="Follow my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 
@@ -284,17 +298,19 @@ body.pc .chip:hover{color:var(--ink)}
 <section id="reportPanel" class="panel sheet" hidden>
   <div id="grab" class="grab" role="button" aria-label="Drag to resize the list"><span></span><div id="sheetSum" class="sheetSum"></div></div>
   <div class="sheetHead">
+    <div class="acts4">
+      <button id="placeBtn" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><path d="M12 7v6M9 10h6"/></svg><span id="placeLbl">Add Pin</span></button>
+      <button id="darkBtn2" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg><span>No Streetlight</span></button>
+      <button id="turnBtn2" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg><span>Turnaround</span></button>
+      <button id="copyAll" class="tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Copy List</span></button>
+    </div>
     <div class="filters">
       <button class="chip on" data-f="open">Open <span id="cOpen">0</span></button>
       <button class="chip" data-f="done">Reported <span id="cDone">0</span></button>
       <button class="chip" data-f="all">All</button>
-      <button class="chip" data-f="dark">Dark streets <span id="cDark">0</span></button>
+      <button class="chip" data-f="dark">Dark Streets <span id="cDark">0</span></button>
       <button class="chip" data-f="turns">Turnarounds <span id="cTurns">0</span></button>
     </div>
-    <button id="placeBtn" class="small">Add on map</button>
-    <button id="darkBtn2" class="small">No streetlight</button>
-    <button id="turnBtn2" class="small">Turnaround</button>
-    <button id="copyAll" class="small">Copy list</button>
   </div>
   <ul id="list"></ul>
 </section>
@@ -305,8 +321,8 @@ body.pc .chip:hover{color:var(--ink)}
     <p id="setupMsg" hidden>To show Google Maps, paste a Google Maps API key below. It is saved only on this device.</p>
     <label for="keyIn">Google Maps API key</label>
     <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza...">
-    <p>Enable Maps JavaScript API, Geocoding API and Routes API on the key. Routes API makes No streetlight lines follow the road. Roads API is only needed for snap to roads.</p>
-    <div class="row"><button id="saveKey" class="primary">Save key and reload</button></div>
+    <p>Enable Maps JavaScript API, Geocoding API and Routes API on the key. Routes API makes No Streetlight lines follow the road. Roads API is only needed for snap to roads.</p>
+    <div class="row"><button id="saveKey" class="primary">Save Key</button></div>
     <label class="check phoneOnly"><input id="snapIn" type="checkbox"> Snap driven path to roads (Roads API)</label>
     <p class="phoneOnly">Off: the green line follows raw GPS. On: it is matched to the road you drove, which looks cleaner.</p>
     <label class="phoneOnly">Map direction while driving</label>
@@ -318,27 +334,27 @@ body.pc .chip:hover{color:var(--ink)}
     <label>Backup</label>
     <p>Data lives in this browser only. Export now and then so nothing is lost.</p>
     <div class="row">
-      <button id="expJson" class="ghost">Export backup</button>
-      <button id="expCsv" class="ghost">Export pins (CSV)</button>
-      <button id="impBtn" class="ghost">Import backup</button>
+      <button id="expJson" class="ghost">Export Backup</button>
+      <button id="expCsv" class="ghost">Export Pins (CSV)</button>
+      <button id="impBtn" class="ghost">Import Backup</button>
       <input id="impFile" type="file" accept="application/json,.json" hidden>
     </div>
     <div class="hr"></div>
     <label>Clear data</label>
     <div class="row">
-      <button id="clrTrack" class="danger">Clear driven roads</button>
-      <button id="clrPins" class="danger">Delete all pins</button>
-      <button id="clrDark" class="danger">Delete dark streets</button>
-      <button id="clrTurns" class="danger">Delete turnarounds</button>
+      <button id="clrTrack" class="danger">Clear Driven Roads</button>
+      <button id="clrPins" class="danger">Delete All Pins</button>
+      <button id="clrDark" class="danger">Delete Dark Streets</button>
+      <button id="clrTurns" class="danger">Delete Turnarounds</button>
     </div>
     <div class="row" style="margin-top:22px"><button id="closeSet" class="ghost" style="width:100%">Done</button></div>
   </div>
 </div>
 
-<div id="freeze"><span>Snapshot. Start Map to move the map.</span></div>
+<div id="freeze"><span>Map frozen. Start Map to move it.</span></div>
 <div id="mapTools">
-  <button id="toolPin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out pin</button>
-  <button id="toolDark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg>No streetlight</button>
+  <button id="toolPin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light Out Pin</button>
+  <button id="toolDark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg>No Streetlight</button>
   <button id="toolTurn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V10a5 5 0 0 1 10 0v7"/><path d="M13 13l4 4 4-4"/></svg>Turnaround</button>
 </div>
 <div id="darkBar" hidden><span id="darkTxt"></span><button id="barHere" hidden>Use my location</button><button id="darkCancel">Cancel</button></div>
@@ -348,10 +364,10 @@ body.pc .chip:hover{color:var(--ink)}
 <div id="phoneSim" hidden>
   <div class="phoneWrap"><div class="phoneBody"><div id="simScreen" class="phoneScreen"></div></div></div>
   <div class="simSide">
-    <h2>iPhone view</h2>
+    <h2>iPhone View</h2>
     <p>The phone layout at iPhone Pro Max size (440 × 956 points). It shares this PC's data, so changes show up in both.</p>
     <p>This view loads Google Maps, so it uses your API quota.</p>
-    <button id="simClose" class="primary">Close iPhone view</button>
+    <button id="simClose" class="primary">Close iPhone View</button>
   </div>
 </div>
 <div id="mapMsg" hidden></div>
@@ -409,9 +425,10 @@ let toastT;
 function toast(msg, ms){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), Math.max(ms || 0, 4000)); } // at least 4 s on screen
 function armed(btn, label, fn){ // two-tap confirm
   if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; fn(); return; }
-  btn.dataset.armed = '1'; btn.textContent = 'Tap again to confirm';
+  btn.dataset.armed = '1'; btn.textContent = (isPC ? 'Click' : 'Tap') + ' again to confirm';
   setTimeout(() => { if (btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = label; } }, 3500);
 }
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 const darkMeters = () => data.dark.reduce((m, d) => m + segLen(d.path), 0);
 function updateStats(){
   // dark streets count as covered: you checked them without driving them
@@ -423,12 +440,12 @@ function updateStats(){
   $('cDone').textContent = data.pins.length - open;
   $('cDark').textContent = data.dark.length;
   $('cTurns').textContent = data.turns.length;
-  $('sheetSum').textContent = open + ' open · ' + (data.pins.length - open) + ' reported · ' + data.dark.length + ' dark streets';
+  $('sheetSum').textContent = open + ' open · ' + (data.pins.length - open) + ' reported · ' + plural(data.dark.length, 'dark street', 'dark streets') + ' · ' + plural(data.turns.length, 'turnaround', 'turnarounds');
   if (isPC){
     const done = data.pins.length - open, imp = store.get(LSIMP);
     $('pcMiles').textContent = miles; $('pcOpen').textContent = open; $('pcDone').textContent = done; $('pcDark').textContent = data.dark.length;
     $('summary').innerHTML = (data.pins.length || data.segs.length || data.dark.length)
-      ? 'On this PC: <b>' + data.pins.length + ' pins</b> (' + open + ' open, ' + done + ' reported), <b>' + data.dark.length + ' dark streets</b> and <b>' + miles + ' miles</b> covered.' +
+      ? 'On this PC: <b>' + plural(data.pins.length, 'pin', 'pins') + '</b> (' + open + ' open, ' + done + ' reported), <b>' + plural(data.dark.length, 'dark street', 'dark streets') + '</b> and <b>' + miles + ' miles</b> covered.' +
         (imp && !isNaN(Date.parse(imp)) ? ' Backup made ' + esc(fmtT(Date.parse(imp))) + '.' : '')
       : 'No data on this PC yet. Import a backup to see your pins.';
   }
@@ -567,7 +584,7 @@ function setTracking(on){
   tracking = on; store.set(LSTRK, on ? '1' : '0');
   const b = $('trackBtn'); b.classList.toggle('on', on); b.querySelector('.lbl').textContent = on ? 'Stop Tracking' : 'Start Tracking';
   paintMapBtns();
-  if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking. Keep this screen open while driving.'); }
+  if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking started. Keep this screen open while driving.'); }
   else { const s = curSeg; curSeg = null; lastKept = null; maybeSnap(s, true); releaseWake(); save(true); }
 }
 
@@ -625,7 +642,7 @@ function drawPin(p){
     m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: p.lat, lng: p.lng}, content: pinEl(p), title: 'Light #' + p.n, gmpDraggable: mode === 'report', zIndex: 10});
     m.addListener('click', () => { if (darkStep || pickTurn) return; if (mode !== 'report') setMode('report'); select(p.id, true); });
     m.addListener('dragend', () => {
-      const q = llOf(m.position); p.lat = r6(q.lat); p.lng = r6(q.lng); save(true); geocode(p); toast('Pin #' + p.n + ' moved');
+      const q = llOf(m.position); p.lat = r6(q.lat); p.lng = r6(q.lng); save(true); geocode(p); toast('Light #' + p.n + ' moved');
     });
     markers.set(p.id, m);
   } else { m.position = {lat: p.lat, lng: p.lng}; m.content = pinEl(p); }
@@ -738,7 +755,7 @@ function startDark(){
   if (noMap()) return;
   if (darkStep){ endDark(); return; }
   endDark(); mapRoom();
-  if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
+  if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
   darkStep = 1; stopFollow();
   darkBar(tapWord() + ' the START of the street with no lights');
 }
@@ -797,9 +814,9 @@ function deleteDark(d){
 function openLineMenu(d){
   select(d.id, false);
   showMenu('Dark street S' + darkNum(d), (d.name ? 'Near ' + d.name + ' · ' : '') + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', [
-    {label: 'Move start point', fn: () => editDark(d, 'start')},
-    {label: 'Move end point', fn: () => editDark(d, 'end')},
-    {label: 'Show in list', fn: () => { if (mode !== 'report') setMode('report'); setFilter('dark'); select(d.id, false); }},
+    {label: 'Move Start Point', fn: () => editDark(d, 'start')},
+    {label: 'Move End Point', fn: () => editDark(d, 'end')},
+    {label: 'Show in List', fn: () => { if (mode !== 'report') setMode('report'); setFilter('dark'); select(d.id, false); }},
     {label: 'Delete', cls: 'del', confirm: true, fn: () => deleteDark(d)}
   ]);
 }
@@ -811,7 +828,7 @@ function startTurn(moveT){
   if (pickTurn && !moveT){ endDark(); return; }
   endDark(); mapRoom();
   if (moveT && moveT !== true) selId = moveT.id;
-  if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
+  if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
   pickTurn = moveT || true; stopFollow();
   $('barHere').hidden = !last;
   darkBar(tapWord() + ' the map where to turn around', 'turn');
@@ -834,9 +851,9 @@ function deleteTurn(t){
 function openTurnMenu(t){
   showMenu('Turnaround T' + turnNum(t), (t.addr ? 'Near ' + t.addr + ' · ' : '') + fmtT(t.t), [
     {label: 'Move', fn: () => startTurn(t)},
-    {label: 'Show in list', fn: () => { if (mode !== 'report') setMode('report'); setFilter('turns'); select(t.id, false); }},
+    {label: 'Show in List', fn: () => { if (mode !== 'report') setMode('report'); setFilter('turns'); select(t.id, false); }},
     {label: 'Open in Google Maps', fn: () => window.open(gmUrl(t), '_blank', 'noopener')},
-    {label: 'Delete turnaround', cls: 'del', confirm: true, fn: () => deleteTurn(t)}
+    {label: 'Delete Turnaround', cls: 'del', confirm: true, fn: () => deleteTurn(t)}
   ]);
 }
 $('turnBtn').addEventListener('click', () => startTurn());
@@ -890,7 +907,7 @@ function renderList(){
   if (filter === 'turns'){ renderTurns(); return; }
   const ps = visiblePins();
   if (!ps.length){
-    $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : isPC ? 'No pins yet. Import a backup from your iPhone.' : 'No pins yet. In Driving mode, tap Light out when you pass a dark streetlight.') + '</li>';
+    $('list').innerHTML = '<li class="empty">' + (data.pins.length ? 'Nothing in this list.' : isPC ? 'No pins yet. Import a backup from your iPhone.' : 'No pins yet. On the Driving screen, tap LEFT or RIGHT when you pass a streetlight that is out.') + '</li>';
     return;
   }
   $('list').innerHTML = ps.map(p => {
@@ -903,14 +920,14 @@ function renderList(){
       '<div class="meta">' + esc(fmtT(p.t)) + ' · ' + esc(p.lat.toFixed(5)) + ', ' + esc(p.lng.toFixed(5)) + (p.done ? ' · Reported' : '') + '</div>' +
       '<input class="note" placeholder="Note or pole number" value="' + esc(p.note) + '">' +
       '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(p)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
-      '<button data-a="side">' + (p.side === 'L' ? 'Change to right' : p.side === 'R' ? 'Change to left' : 'Set side') + '</button>' +
-      '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark reported') + '</button>' +
+      '<button data-a="side">' + (p.side === 'L' ? 'Change to Right' : p.side === 'R' ? 'Change to Left' : 'Set Side') + '</button>' +
+      '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark Reported') + '</button>' +
       '<button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
 function renderDark(){
   if (!data.dark.length){
-    $('list').innerHTML = '<li class="empty">No dark streets yet. Use No streetlight, then ' + (isPC ? 'click' : 'tap') + ' the start and end of the street on the map.</li>';
+    $('list').innerHTML = '<li class="empty">No dark streets yet. Tap No Streetlight, then ' + (isPC ? 'click' : 'tap') + ' the start and end of the street on the map.</li>';
     return;
   }
   $('list').innerHTML = data.dark.slice().sort((a, b) => b.t - a.t).map(d => {
@@ -920,14 +937,14 @@ function renderDark(){
       '<div class="addr" data-a="go">' + (d.name ? 'Near ' + esc(d.name) : 'Street with no lights') + '</div>' +
       '<div class="meta">' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi · ' + esc(fmtT(d.t)) + (d.straight ? ' · straight line, not road' : '') + '</div>' +
       '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(mid)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
-      '<button data-a="go">Show on map</button>' + (canEdit() ? '<button data-a="start">Move start</button><button data-a="end">Move end</button>' : '') +
+      '<button data-a="go">Show on Map</button>' + (canEdit() ? '<button data-a="start">Move Start</button><button data-a="end">Move End</button>' : '') +
       '<button data-a="copy">Copy</button><button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
 const turnNum = t => data.turns.indexOf(t) + 1;
 function renderTurns(){
   if (!data.turns.length){
-    $('list').innerHTML = '<li class="empty">No turnarounds yet. Use the U-turn button, then ' + (isPC ? 'click' : 'tap') + ' the map where it is safe to turn around.</li>';
+    $('list').innerHTML = '<li class="empty">No turnarounds yet. Tap Turnaround, then ' + (isPC ? 'click' : 'tap') + ' the map where it is safe to turn around.</li>';
     return;
   }
   $('list').innerHTML = data.turns.slice().sort((a, b) => b.t - a.t).map(t =>
@@ -936,7 +953,7 @@ function renderTurns(){
     '<div class="addr" data-a="go">' + (t.addr ? 'Near ' + esc(t.addr) : 'Turnaround') + '</div>' +
     '<div class="meta">' + esc(fmtT(t.t)) + ' · ' + t.lat.toFixed(5) + ', ' + t.lng.toFixed(5) + '</div>' +
     '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(t)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
-    '<button data-a="go">Show on map</button><button data-a="move">Move</button><button data-a="del" class="del">Delete</button></div></div></li>'
+    '<button data-a="go">Show on Map</button><button data-a="move">Move</button><button data-a="del" class="del">Delete</button></div></div></li>'
   ).join('');
 }
 function turnText(t){ return 'Turnaround T' + turnNum(t) + ': ' + (t.addr ? 'Near ' + t.addr : t.lat + ', ' + t.lng) + '\n' + gmUrl(t); }
@@ -1000,16 +1017,16 @@ $('list').addEventListener('click', e => {
   else if (act === 'side'){ // two taps to change a side, so a slip of the finger doesn't flip it
     if (p.side) armed(a, a.textContent, () => setSide(p, p.side === 'L' ? 'R' : 'L'));
     else showMenu('Light #' + p.n + ': which side?', 'Left or right of the road, as you were driving', [
-      {label: 'Left side', fn: () => setSide(p, 'L')}, {label: 'Right side', fn: () => setSide(p, 'R')}]);
+      {label: 'Left Side', fn: () => setSide(p, 'L')}, {label: 'Right Side', fn: () => setSide(p, 'R')}]);
   }
-  else if (act === 'done'){ p.done = !p.done; save(true); drawPin(p); renderList(); toast(p.done ? 'Marked #' + p.n + ' reported' : 'Reopened #' + p.n); }
+  else if (act === 'done'){ p.done = !p.done; save(true); drawPin(p); renderList(); toast(p.done ? 'Light #' + p.n + ' marked reported' : 'Light #' + p.n + ' reopened'); }
   else if (act === 'del') armed(a, 'Delete', () => {
     const n = p.n, later = data.pins.some(x => x.n > n);
     data.pins = data.pins.filter(x => x !== p);
     const m = markers.get(p.id); if (m){ m.map = null; markers.delete(p.id); }
     if (selId === p.id) selId = null;
     renumberPins(); data.pins.forEach(drawPin); // markers show the new numbers
-    save(true); renderList(); toast('Deleted #' + n + (later ? '. Later pins moved down one number.' : ''));
+    save(true); renderList(); toast('Deleted light #' + n + (later ? '. Later lights moved down one number.' : ''));
   });
 });
 $('list').addEventListener('input', e => {
@@ -1049,7 +1066,7 @@ function setFilter(f){ filter = f; document.querySelectorAll('.chip').forEach(x 
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setFilter(c.dataset.f)));
 $('placeBtn').addEventListener('click', () => {
   if (darkStep || pickTurn) endDark();
-  placing = !placing; $('placeBtn').textContent = placing ? 'Cancel' : 'Add on map';
+  placing = !placing; $('placeLbl').textContent = placing ? 'Cancel' : 'Add Pin';
   if (placing) toast('Tap the map where the light is', 3500);
 });
 $('copyAll').addEventListener('click', () => {
@@ -1128,7 +1145,7 @@ function setMode(m){
   $('drivePanel').hidden = m !== 'drive'; $('reportPanel').hidden = m !== 'report';
   if (m === 'report') setSheet(sheetState); // before fitView, which needs the sheet's height
   if (m === 'report' && map && live && typeof map.setHeading === 'function') map.setHeading(0); // the list view is north up
-  if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
+  if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
   for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
   if (m === 'report'){
     renderList();
@@ -1217,7 +1234,7 @@ function importFile(f){
     useData(d);
     store.set(LSIMP, d.exported || new Date().toISOString());
     save(true); if (isPC && canEdit()) fitView();
-    toast('Imported ' + data.pins.length + ' pins');
+    toast('Imported ' + plural(data.pins.length, 'pin', 'pins'));
   }).catch(() => toast('That file is not a Streetlight Tracker backup'));
 }
 // The PC page and its iPhone view share this browser's storage: when one saves, the other picks it up,
@@ -1227,16 +1244,16 @@ window.addEventListener('storage', e => {
   try { const d = JSON.parse(e.newValue); if (validData(d)) useData(d); } catch(err){}
 });
 $('impFile').addEventListener('change', e => { importFile(e.target.files && e.target.files[0]); e.target.value = ''; });
-$('clrTrack').addEventListener('click', e => armed(e.currentTarget, 'Clear driven roads', () => {
+$('clrTrack').addEventListener('click', e => armed(e.currentTarget, 'Clear Driven Roads', () => {
   data.segs = []; curSeg = null; lastKept = null; meters = 0; save(true); redrawAll(); updateStats(); toast('Driven roads cleared');
 }));
-$('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete all pins', () => {
+$('clrPins').addEventListener('click', e => armed(e.currentTarget, 'Delete All Pins', () => {
   data.pins = []; data.nextN = 1; selId = null; save(true); redrawAll(); renderList(); toast('All pins deleted');
 }));
-$('clrDark').addEventListener('click', e => armed(e.currentTarget, 'Delete dark streets', () => {
+$('clrDark').addEventListener('click', e => armed(e.currentTarget, 'Delete Dark Streets', () => {
   data.dark = []; selId = null; endDark(); save(true); redrawAll(); renderList(); toast('Dark streets deleted');
 }));
-$('clrTurns').addEventListener('click', e => armed(e.currentTarget, 'Delete turnarounds', () => {
+$('clrTurns').addEventListener('click', e => armed(e.currentTarget, 'Delete Turnarounds', () => {
   data.turns = []; endDark(); save(true); redrawAll(); toast('Turnarounds deleted');
 }));
 
@@ -1294,8 +1311,8 @@ function setupMap(){
     if (darkStep){ if (e.latLng) darkClick({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (pickTurn){ if (e.latLng) addTurnAt({lat: e.latLng.lat(), lng: e.latLng.lng()}); return; }
     if (!placing || !e.latLng) return;
-    placing = false; $('placeBtn').textContent = 'Add on map';
-    const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Pinned light #' + p.n + '. Drag it to adjust.');
+    placing = false; $('placeLbl').textContent = 'Add Pin';
+    const p = addPin(e.latLng.lat(), e.latLng.lng()); select(p.id, false); toast('Light #' + p.n + ' added. Drag it to adjust.');
   });
   redrawAll();
   if (last){ drawMe(last); if (follow) { map.setCenter(last); map.setZoom(driveZoom); } }
@@ -1342,9 +1359,9 @@ function paintMapBtns(){
 }
 function setLive(on){
   if (on && !key){ wantMap = true; openSettings(true); return; }
-  if (!on && tracking){ toast('Stop tracking first. The map stays on while tracking.'); return; }
+  if (!on && tracking){ toast('Stop Tracking first'); return; }
   live = on;
-  if (!on){ endDark(); closeMenu(); if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; } }
+  if (!on){ endDark(); closeMenu(); if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; } }
   if (on){ document.body.classList.add('mapOn'); if (!scriptStarted){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else if (mode === 'drive') followMe(); }
   applyLive();
 }
@@ -1373,7 +1390,7 @@ if (isPC){
   };
   $('toolPin').addEventListener('click', tool(() => {
     if (darkStep || pickTurn) endDark();
-    placing = !placing; $('placeBtn').textContent = placing ? 'Cancel' : 'Add on map';
+    placing = !placing; $('placeLbl').textContent = placing ? 'Cancel' : 'Add Pin';
     if (placing) toast('Click the map where the light is', 3500);
   }));
   $('toolDark').addEventListener('click', tool(startDark));
@@ -1407,7 +1424,7 @@ if (!isPC){ // the map stays off until Start Map (or Start tracking); GPS and pi
 { // say which device this was recognised as, for 5 seconds
   const name = isPC ? (/Mac/.test(UA) ? 'Mac' : /Windows/.test(UA) ? 'Windows PC' : 'computer')
     : /iPhone/.test(UA) ? 'iPhone' : /iPad|Macintosh/.test(UA) ? 'iPad' : /Android/.test(UA) ? 'Android device' : 'phone';
-  toast(isSim ? 'iPhone view (simulated on this PC)' : 'Device: ' + name + (isPC ? '. Using the PC layout.' : '. Using the phone layout.'), 5000);
+  toast(isSim ? 'iPhone View (simulated on this PC)' : 'Device: ' + name + (isPC ? '. Using the PC layout.' : '. Using the phone layout.'), 5000);
 }
 window.addEventListener('pagehide', () => save(true));
 }
