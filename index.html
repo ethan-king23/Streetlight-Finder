@@ -31,7 +31,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .icon svg{width:24px;height:24px}
 #recenter{position:fixed;right:12px;z-index:5;display:none}
 body.drive #recenter{bottom:calc(var(--sb) + 258px)}
-body.report #recenter{bottom:calc(55vh + 12px)}
+body.report #recenter{bottom:calc(var(--sheetH, 55vh) + 12px)}
 #recenter.show{display:grid}
 .panel{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 14px calc(var(--sb) + 14px);box-shadow:0 -8px 30px rgba(0,0,0,.4)}
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
@@ -43,13 +43,21 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 .top2{position:fixed;left:12px;right:12px;top:calc(var(--st) + 72px);z-index:5;display:flex;gap:8px;pointer-events:none}
 .top2>*{pointer-events:auto}
 body.report #trackBtn{display:none}
-.track{min-height:44px;padding:0 16px;border-radius:12px;background:rgba(20,22,26,.92);border:2px solid var(--green);color:var(--green);font-weight:700;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
-.track::before{content:'';width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.5}
-.track.on{background:var(--green);color:#04210e}
-.track.on::before{opacity:1;animation:blink 1.2s ease-in-out infinite}
-@keyframes blink{50%{opacity:.25}}
-.mapbtn{min-height:44px;padding:0 14px;border-radius:12px;background:rgba(20,22,26,.92);border:2px solid #4f9dff;color:#8dbdff;font-weight:700;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+/* the two phone buttons share one look: same size and dark glass as the tabs, a colored icon, and a tint when on */
+.top2 button{flex:1;max-width:calc(50% - 4px);min-height:46px;padding:0 12px;border-radius:14px;background:rgba(20,22,26,.92);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
+.top2 .ic{width:18px;height:18px;flex:none}
+.top2 .dot{width:10px;height:10px;border-radius:50%;background:#7b818b;flex:none}
+#trackBtn.on{background:rgba(20,83,45,.94);border-color:#22c55e;color:#dcfce7}
+#trackBtn.on .dot{background:#4ade80;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.7)}70%,100%{box-shadow:0 0 0 8px rgba(74,222,128,0)}}
+#phoneMapBtn .ic{color:#8dbdff}
+#phoneMapBtn.on{background:rgba(30,58,138,.94);border-color:#4f9dff;color:#e0ecff}
+#phoneMapBtn.on .ic{color:#fff}
+#phoneMapBtn.locked{background:rgba(23,37,84,.96);border-color:#3b5a9a;color:#b9cdf5} /* map can't be stopped while tracking */
+/* PC Start Map button */
+.mapbtn{min-height:44px;padding:0 14px;border-radius:12px;background:rgba(20,22,26,.92);border:2px solid #4f9dff;color:#8dbdff;font-weight:700;font-size:15px}
 .mapbtn.on{background:#4f9dff;color:#061a33}
+@media(prefers-reduced-motion:reduce){#trackBtn.on .dot{animation:none}}
 /* Light out, split into a left and a right button */
 .pinbtn{flex:1;min-height:96px;border-radius:18px;background:var(--amber);color:var(--amberInk);font-weight:800;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 0 rgba(255,176,32,.6)}
 .pinbtn svg{width:30px;height:30px}
@@ -57,7 +65,15 @@ body.report #trackBtn{display:none}
 .side{font-weight:600;color:var(--ink)}
 .pinbtn.flash{animation:flash .6s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,176,32,.7);transform:scale(.96)}100%{box-shadow:0 0 0 22px rgba(255,176,32,0);transform:scale(1)}}
-.sheet{height:55vh;display:flex;flex-direction:column;padding-bottom:0}
+.sheet{height:55vh;display:flex;flex-direction:column;padding-bottom:0;overflow:hidden;transition:height .22s ease}
+.sheet.dragging{transition:none}
+/* drag handle: drag up to expand, down to shrink, tap to toggle */
+.grab{flex:none;display:flex;flex-direction:column;align-items:center;padding:12px 0 8px;margin:-14px -14px 0;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.grab>span{width:44px;height:5px;border-radius:3px;background:#5a606b}
+.sheetSum{display:none;margin-top:6px;font-size:14px;font-weight:600;color:var(--mute)}
+.sheet.min .sheetSum{display:block}
+.sheet.min .sheetHead,.sheet.min #list{display:none}
+body.pc .grab{display:none}
 .sheetHead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
 .filters{display:flex;gap:6px;flex:1 1 auto}
 .chip{min-height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--line);color:var(--mute);font-size:15px;white-space:nowrap}
@@ -234,8 +250,8 @@ body.pc .chip:hover{color:var(--ink)}
 </main>
 
 <div class="top2">
-  <button id="trackBtn" class="track">Start tracking</button>
-  <button id="phoneMapBtn" class="mapbtn">Start Map</button>
+  <button id="trackBtn"><span class="dot"></span><span class="lbl">Start tracking</span></button>
+  <button id="phoneMapBtn" class="mapbtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg><span class="lbl">Start Map</span></button>
 </div>
 <div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start tracking also starts the map. Light out pins still work with the map off.</div>
 
@@ -258,6 +274,7 @@ body.pc .chip:hover{color:var(--ink)}
 </section>
 
 <section id="reportPanel" class="panel sheet" hidden>
+  <div id="grab" class="grab" role="button" aria-label="Drag to resize the list"><span></span><div id="sheetSum" class="sheetSum"></div></div>
   <div class="sheetHead">
     <div class="filters">
       <button class="chip on" data-f="open">Open <span id="cOpen">0</span></button>
@@ -325,6 +342,7 @@ body.pc .chip:hover{color:var(--ink)}
 </div>
 <div id="mapMsg" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="sbProbe" style="position:fixed;left:0;bottom:0;width:0;height:var(--sb);visibility:hidden;pointer-events:none"></div>
 
 <script>
 {
@@ -390,6 +408,7 @@ function updateStats(){
   $('cOpen').textContent = open;
   $('cDone').textContent = data.pins.length - open;
   $('cDark').textContent = data.dark.length;
+  $('sheetSum').textContent = open + ' open · ' + (data.pins.length - open) + ' reported · ' + data.dark.length + ' dark streets';
   if (isPC){
     const done = data.pins.length - open, imp = store.get(LSIMP);
     $('pcMiles').textContent = miles; $('pcOpen').textContent = open; $('pcDone').textContent = done; $('pcDark').textContent = data.dark.length;
@@ -514,7 +533,8 @@ document.addEventListener('visibilitychange', () => {
 function setTracking(on){
   if (on && !live) setLive(true); // tracking starts the map
   tracking = on; store.set(LSTRK, on ? '1' : '0');
-  const b = $('trackBtn'); b.classList.toggle('on', on); b.textContent = on ? 'Stop tracking' : 'Start tracking';
+  const b = $('trackBtn'); b.classList.toggle('on', on); b.querySelector('.lbl').textContent = on ? 'Stop tracking' : 'Start tracking';
+  paintMapBtns();
   if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking. Keep this screen open while driving.'); }
   else { const s = curSeg; curSeg = null; lastKept = null; maybeSnap(s, true); releaseWake(); save(true); }
 }
@@ -604,9 +624,9 @@ function drawTurn(t){
   let m = turnMarks.get(t.id);
   if (!m){
     const el = document.createElement('img'); el.className = 'turnmk'; el.src = TURN_IMG; el.width = 32; el.height = 32; el.alt = 'Turnaround';
-    m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: t.lat, lng: t.lng}, content: el, title: 'Turn around here', gmpDraggable: mode === 'report', zIndex: 9});
+    // locked in place: it only moves through its menu's Move button
+    m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: t.lat, lng: t.lng}, content: el, title: 'Turn around here', zIndex: 9});
     m.addListener('click', () => { if (darkStep || pickTurn) return; openTurnMenu(t); });
-    m.addListener('dragend', () => { const q = llOf(m.position); t.lat = r6(q.lat); t.lng = r6(q.lng); save(true); toast('Turnaround moved'); });
     turnMarks.set(t.id, m);
   } else m.position = {lat: t.lat, lng: t.lng};
 }
@@ -770,7 +790,7 @@ function addTurnAt(ll){
 }
 function openTurnMenu(t){
   showMenu('Turnaround', 'A safe spot to turn around · ' + fmtT(t.t), [
-    {label: 'Move it', fn: () => startTurn(t)},
+    {label: 'Move', fn: () => startTurn(t)},
     {label: 'Open in Google Maps', fn: () => window.open(gmUrl(t), '_blank', 'noopener')},
     {label: 'Delete turnaround', cls: 'del', confirm: true, fn: () => {
       data.turns = data.turns.filter(x => x !== t);
@@ -877,6 +897,7 @@ async function copyText(txt){
 function select(id, pan){
   const p = data.pins.find(x => x.id === id), d = !p && data.dark.find(x => x.id === id); if (!p && !d) return;
   selId = id;
+  if (!isPC && mode === 'report' && sheetState === 'min') setSheet('half'); // show the item you picked
   data.pins.forEach(drawPin); data.dark.forEach(drawDark);
   if (pan && canEdit()){ // a frozen map stays where it is
     follow = false; $('recenter').classList.add('show');
@@ -954,7 +975,51 @@ $('copyAll').addEventListener('click', () => {
   const ps = visiblePins(); if (!ps.length){ toast('Nothing to copy'); return; }
   copyText('Streetlights out (' + ps.length + ')\n\n' + ps.slice().sort((a, b) => a.n - b.n).map(pinText).join('\n\n'));
 });
-const fitPad = () => isPC ? 60 : {top: 90, left: 40, right: 40, bottom: Math.round(window.innerHeight * .55) + 20};
+const fitPad = () => isPC ? 60 : {top: 140, left: 40, right: 40, bottom: ($('reportPanel').offsetHeight || Math.round(innerHeight * .55)) + 20};
+
+// ---------- reporting sheet (phone): drag the handle up to expand, down to shrink, tap to toggle ----------
+const LSSHEET = 'slt.sheet';
+let sheetState = ['min', 'half', 'full'].includes(store.get(LSSHEET)) ? store.get(LSSHEET) : 'half';
+function sheetSizes(){
+  const sb = $('sbProbe').offsetHeight; // the iPhone's home-bar space
+  const top2 = document.querySelector('.top2').getBoundingClientRect().bottom;
+  const min = 64 + sb; // just the handle and a one-line summary
+  const full = Math.max(min, Math.round(innerHeight - top2 - 12));
+  return {min, half: Math.max(min, Math.min(full, Math.round(innerHeight * .5))), full};
+}
+function setSheet(state, px){
+  if (isPC) return;
+  const s = sheetSizes(), h = px != null ? px : s[state];
+  $('reportPanel').style.height = h + 'px';
+  $('reportPanel').classList.toggle('min', state ? state === 'min' : h <= s.min + 8);
+  document.body.style.setProperty('--sheetH', h + 'px');
+  if (state){ sheetState = state; store.set(LSSHEET, state); }
+}
+if (!isPC){
+  const g = $('grab'), panel = $('reportPanel');
+  let y0 = 0, h0 = 0, moved = false, dragging = false;
+  g.addEventListener('pointerdown', e => {
+    dragging = true; moved = false; y0 = e.clientY; h0 = panel.offsetHeight;
+    panel.classList.add('dragging'); try { g.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  g.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dy = y0 - e.clientY; if (Math.abs(dy) > 6) moved = true; if (!moved) return;
+    const s = sheetSizes(); setSheet(null, Math.max(s.min, Math.min(s.full, h0 + dy)));
+  });
+  const end = e => {
+    if (!dragging) return; dragging = false; panel.classList.remove('dragging');
+    if (!moved){ setSheet(sheetState === 'min' ? 'half' : 'min'); return; } // a tap toggles small / half
+    const s = sheetSizes(), h = panel.offsetHeight, order = ['min', 'half', 'full'];
+    let pick = order.reduce((b, k) => Math.abs(s[k] - h) < Math.abs(s[b] - h) ? k : b, 'min');
+    // a clear drag always moves at least one step in that direction
+    const dy = y0 - e.clientY, i0 = order.indexOf(sheetState);
+    if (pick === sheetState && Math.abs(dy) > 40) pick = order[Math.max(0, Math.min(2, i0 + (dy > 0 ? 1 : -1)))];
+    setSheet(pick);
+  };
+  g.addEventListener('pointerup', end); g.addEventListener('pointercancel', end);
+  window.addEventListener('resize', () => { if (mode === 'report') setSheet(sheetState); });
+}
 function fitView(){ // frame the pins and dark streets (on PC also the driven roads)
   if (!canEdit()) return; // a frozen map stays where it is
   const pts = data.pins.map(p => ({lat: p.lat, lng: p.lng}));
@@ -972,9 +1037,9 @@ function setMode(m){
   document.body.classList.remove('drive', 'report'); document.body.classList.add(m);
   $('tabDrive').classList.toggle('on', m === 'drive'); $('tabReport').classList.toggle('on', m === 'report');
   $('drivePanel').hidden = m !== 'drive'; $('reportPanel').hidden = m !== 'report';
+  if (m === 'report') setSheet(sheetState); // before fitView, which needs the sheet's height
   if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; }
   for (const mk of markers.values()) mk.gmpDraggable = m === 'report';
-  for (const mk of turnMarks.values()) mk.gmpDraggable = m === 'report';
   if (m === 'report'){
     renderList();
     if (!selId) fitView();
@@ -1166,9 +1231,17 @@ function loadMaps(){
 // Start Map again unfreezes the same map, which Google does not bill as a new map load.
 function applyLive(){
   document.body.classList.toggle('mapLive', live);
-  document.querySelectorAll('.mapbtn').forEach(b => { b.textContent = live ? 'Stop Map' : 'Start Map'; b.classList.toggle('on', live); });
+  paintMapBtns();
   if (map) map.setOptions({gestureHandling: live ? 'greedy' : 'none', keyboardShortcuts: live});
   renderList(); // Move start/end buttons only show while live
+}
+function paintMapBtns(){
+  const locked = live && tracking; // while tracking the map can't be stopped, so say so
+  document.querySelectorAll('.mapbtn').forEach(b => {
+    const l = b.querySelector('.lbl') || b;
+    l.textContent = locked ? 'Map on' : live ? 'Stop Map' : 'Start Map';
+    b.classList.toggle('on', live); b.classList.toggle('locked', locked);
+  });
 }
 function setLive(on){
   if (on && !key){ wantMap = true; openSettings(true); return; }
