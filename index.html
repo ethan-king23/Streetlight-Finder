@@ -668,7 +668,9 @@ function drawPin(p){
   if (!m){
     // locked in place: lights move only through the Move button in the Reporting list
     m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: p.lat, lng: p.lng}, content: pinEl(p), title: 'Light #' + p.n, zIndex: 10});
-    m.addListener('click', () => { if (picking()) return; if (mode !== 'report') setMode('report'); select(p.id, true); });
+    m.addListener('click', () => { // show it under Open or Reported unless the current filter already does
+      const own = p.done ? 'done' : 'open'; showItem(p.id, filter === 'all' || filter === own ? null : own);
+    });
     markers.set(p.id, m);
   } else { m.position = {lat: p.lat, lng: p.lng}; m.content = pinEl(p); }
 }
@@ -682,7 +684,7 @@ function drawDark(d){
       if (darkStep){ if (ll) darkClick(ll); return; } // taps on a red line still count while picking points
       if (pickTurn){ if (ll) addTurnAt(ll); return; }
       if (pickPin){ if (ll) movePinTo(pickPin, ll); return; }
-      openLineMenu(d);
+      showItem(d.id, 'dark');
     });
     darkLines.set(d.id, l);
   }
@@ -701,7 +703,7 @@ function drawTurn(t){
     const el = document.createElement('img'); el.className = 'turnmk'; el.src = TURN_IMG; el.width = 32; el.height = 32; el.alt = 'Turnaround';
     // locked in place: it only moves through its menu's Move button
     m = new google.maps.marker.AdvancedMarkerElement({map, position: {lat: t.lat, lng: t.lng}, content: el, title: 'Turn around here', zIndex: 9});
-    m.addListener('click', () => { if (picking()) return; openTurnMenu(t); });
+    m.addListener('click', () => showItem(t.id, 'turns'));
     turnMarks.set(t.id, m);
   } else m.position = {lat: t.lat, lng: t.lng};
 }
@@ -770,23 +772,25 @@ async function routePath(a, b){
 const tapWord = () => isPC ? 'Click' : 'Tap';
 function darkBar(txt, cls){ $('darkTxt').textContent = txt || ''; $('darkBar').hidden = !txt; $('darkBar').classList.toggle('turn', cls === 'turn'); $('darkBar').classList.toggle('pin', cls === 'pin'); }
 function stopFollow(){ follow = false; $('recenter').classList.add('show'); }
-// Map tools need a live map. A frozen map is simply unfrozen (same map, no new load). If the map was never
-// started, a pop-up offers Start Map, and the tool you tapped (next) carries on once the map has loaded.
-let pendingTool = null;
-function noMap(next){
-  if (map && !live) setLive(true);
+// Map tools need a live map. The map is never started (or unfrozen) for you, since that uses your API:
+// if it is off or frozen, a pop-up says so and nothing else happens.
+function noMap(){
   if (canEdit()) return false;
-  if (scriptStarted){ pendingTool = next || null; toast('Wait for the map to load'); return true; }
-  showMenu('Start the map first', 'Placing this needs the map. Starting it uses your Google Maps API.', [
-    {label: 'Start Map', cls: 'go', fn: () => { pendingTool = next || null; setLive(true); }}
-  ]);
+  if (live && scriptStarted) toast('Wait for the map to load');
+  else toast('The map needs to be enabled.\n' + (isPC ? 'Press' : 'Tap') + ' Start Map first.');
   return true;
 }
-function runPendingTool(){ if (!pendingTool || !canEdit()) return; const f = pendingTool; pendingTool = null; setTimeout(f, 300); }
+// tapping a light, red line or turnaround on the map: open it in the Reporting list and zoom to it
+function showItem(id, filt){
+  if (picking()) return;
+  if (mode !== 'report') setMode('report');
+  if (filt && filter !== filt) setFilter(filt);
+  select(id, true);
+}
 // pick a new spot for a light (Move in the Reporting list); lights can't be dragged
 let pickPin = null;
 function startMovePin(p){
-  if (noMap(() => startMovePin(p))) return;
+  if (noMap()) return;
   endDark(); mapRoom(); stopFollow();
   if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
   pickPin = p; selId = p.id;
@@ -802,7 +806,7 @@ function movePinTo(p, ll){
 const picking = () => !!(darkStep || pickTurn || pickPin);
 function dotAt(ll){ const dot = document.createElement('div'); dot.className = 'dot'; return new google.maps.marker.AdvancedMarkerElement({map, position: ll, content: dot, zIndex: 20}); }
 function startDark(){
-  if (noMap(startDark)) return;
+  if (noMap()) return;
   if (darkStep){ endDark(); return; }
   endDark(); mapRoom();
   if (placing){ placing = false; $('placeLbl').textContent = 'Add Pin'; }
@@ -849,7 +853,7 @@ async function darkClick(ll){
   }
 }
 function editDark(d, which){ // move the start or end of a red line; the other end stays put
-  if (noMap(() => editDark(d, which))) return;
+  if (noMap()) return;
   endDark(); stopFollow(); mapRoom();
   darkEdit = {d, which}; darkStep = 4;
   darkMk = dotAt(P(which === 'start' ? d.path[d.path.length - 1] : d.path[0]));
@@ -861,20 +865,11 @@ function deleteDark(d){
   if (selId === d.id) selId = null;
   save(true); renderList(); toast('Deleted dark street S' + n);
 }
-function openLineMenu(d){
-  select(d.id, false);
-  showMenu('Dark street S' + darkNum(d), (d.name ? 'Near ' + d.name + ' · ' : '') + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', [
-    {label: 'Move Start Point', fn: () => editDark(d, 'start')},
-    {label: 'Move End Point', fn: () => editDark(d, 'end')},
-    {label: 'Show in List', fn: () => { if (mode !== 'report') setMode('report'); setFilter('dark'); select(d.id, false); }},
-    {label: 'Delete', cls: 'del', confirm: true, fn: () => deleteDark(d)}
-  ]);
-}
 
 // ---------- turnarounds ----------
 function mapRoom(){ if (!isPC && mode === 'report' && sheetState === 'full') setSheet('half'); } // uncover the map to tap on it
 function startTurn(moveT){
-  if (noMap(() => startTurn(moveT))) return;
+  if (noMap()) return;
   if (pickTurn && !moveT){ endDark(); return; }
   endDark(); mapRoom();
   if (moveT && moveT !== true) selId = moveT.id;
@@ -897,14 +892,6 @@ function deleteTurn(t){
   const m = turnMarks.get(t.id); if (m){ m.map = null; turnMarks.delete(t.id); }
   if (selId === t.id) selId = null;
   save(true); renderList(); toast('Deleted turnaround T' + n);
-}
-function openTurnMenu(t){
-  showMenu('Turnaround T' + turnNum(t), (t.addr ? 'Near ' + t.addr + ' · ' : '') + fmtT(t.t), [
-    {label: 'Move', fn: () => startTurn(t)},
-    {label: 'Show in List', fn: () => { if (mode !== 'report') setMode('report'); setFilter('turns'); select(t.id, false); }},
-    {label: 'Open in Google Maps', fn: () => window.open(gmUrl(t), '_blank', 'noopener')},
-    {label: 'Delete Turnaround', cls: 'del', confirm: true, fn: () => deleteTurn(t)}
-  ]);
 }
 $('turnBtn').addEventListener('click', () => startTurn());
 $('turnBtn2').addEventListener('click', () => startTurn());
@@ -1116,7 +1103,7 @@ $('recenter').addEventListener('click', () => {
 function setFilter(f){ filter = f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x.dataset.f === f)); renderList(); }
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => setFilter(c.dataset.f)));
 function startPlace(){ // Add Pin: tap the map where the light is
-  if (!placing && noMap(startPlace)) return;
+  if (!placing && noMap()) return;
   if (picking()) endDark();
   placing = !placing; $('placeLbl').textContent = placing ? 'Cancel' : 'Add Pin';
   if (placing){ mapRoom(); stopFollow(); toast(tapWord() + ' the map where the light is', 3500); }
@@ -1400,7 +1387,6 @@ function setupMap(){
   data.turns.filter(t => !t.addr).forEach(geocode);
   if (mode === 'report') setMode('report');
   applyLive(); // Stop Map may have been pressed while the map was loading
-  runPendingTool(); // the tool you tapped before starting the map
 }
 function loadMaps(){
   if (scriptStarted) return; scriptStarted = true;
@@ -1462,15 +1448,10 @@ if (isPC){
   $('pcGear').innerHTML = $('gear').innerHTML;
   $('pcGear').addEventListener('click', () => openSettings(!key));
   $('mapBtn').addEventListener('click', () => setLive(!live));
-  // Map toolbar. Using a tool on a frozen map unfreezes it first (same map, no new map load).
-  const tool = fn => () => {
-    if (!map){ toast('Wait for the map to load'); return; }
-    if (!live){ setLive(true); toast('Map started again', 1500); }
-    fn();
-  };
-  $('toolPin').addEventListener('click', tool(startPlace));
-  $('toolDark').addEventListener('click', tool(startDark));
-  $('toolTurn').addEventListener('click', tool(() => startTurn()));
+  // Map toolbar: each tool checks the map itself and never turns it on for you
+  $('toolPin').addEventListener('click', startPlace);
+  $('toolDark').addEventListener('click', startDark);
+  $('toolTurn').addEventListener('click', () => startTurn());
   $('pcImport').addEventListener('click', () => $('impFile').click());
   $('homeImport').addEventListener('click', () => $('impFile').click());
   $('homeCsv').addEventListener('click', () => $('expCsv').click());
