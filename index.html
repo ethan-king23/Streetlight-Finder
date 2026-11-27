@@ -49,6 +49,8 @@ body.report #trackBtn{display:none}
 .top2 .dot{width:10px;height:10px;border-radius:50%;background:#7b818b;flex:none}
 #trackBtn.on{background:rgba(20,83,45,.94);border-color:#22c55e;color:#dcfce7}
 #trackBtn.on .dot{background:#4ade80;animation:pulse 1.6s ease-out infinite}
+#trackBtn.on.confirm{background:rgba(127,29,29,.95);border-color:var(--red);color:#fee2e2} /* first tap of two to stop */
+#trackBtn.on.confirm .dot{background:#f87171;animation:none}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.7)}70%,100%{box-shadow:0 0 0 8px rgba(74,222,128,0)}}
 #phoneMapBtn .ic{color:#8dbdff}
 #phoneMapBtn.on{background:rgba(30,58,138,.94);border-color:#4f9dff;color:#e0ecff}
@@ -955,7 +957,20 @@ $('list').addEventListener('focusout', e => { if (e.target.classList.contains('n
   const p = addPin(at.lat, at.lng, b.dataset.side, hd);
   toast('#' + p.n + ' ' + sideText(p).toLowerCase() + (at.acc > 50 ? ' (weak GPS, check it later)' : ''), 3500);
 }));
-$('trackBtn').addEventListener('click', () => setTracking(!tracking));
+// Starting a drive is one tap. Ending it takes two, so a stray tap doesn't stop the recording.
+let stopArmT = null;
+$('trackBtn').addEventListener('click', () => {
+  const b = $('trackBtn');
+  if (!tracking){ setTracking(true); return; }
+  if (!b.classList.contains('confirm')){
+    b.classList.add('confirm'); b.querySelector('.lbl').textContent = 'Tap again to stop';
+    clearTimeout(stopArmT);
+    stopArmT = setTimeout(() => { b.classList.remove('confirm'); if (tracking) b.querySelector('.lbl').textContent = 'Stop tracking'; }, 3000);
+    return;
+  }
+  clearTimeout(stopArmT); b.classList.remove('confirm');
+  setTracking(false); toast('Drive ended');
+});
 $('recenter').addEventListener('click', () => {
   followMe();
   if (map && map.getZoom() < 14) map.setZoom(mode === 'drive' ? driveZoom : 17);
