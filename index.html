@@ -39,10 +39,22 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 .stats b{font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
 .stats span{font-size:13px;color:var(--mute)}
 .driveRow{display:flex;gap:12px;align-items:stretch}
-.track{flex:1;min-height:96px;border-radius:18px;background:#262a31;border:2px solid var(--green);color:var(--green);font-weight:700;font-size:18px}
+/* second row at the top (phone): Start tracking and Start Map */
+.top2{position:fixed;left:12px;right:12px;top:calc(var(--st) + 72px);z-index:5;display:flex;gap:8px;pointer-events:none}
+.top2>*{pointer-events:auto}
+body.report #trackBtn{display:none}
+.track{min-height:44px;padding:0 16px;border-radius:12px;background:rgba(20,22,26,.92);border:2px solid var(--green);color:var(--green);font-weight:700;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
+.track::before{content:'';width:10px;height:10px;border-radius:50%;background:currentColor;opacity:.5}
 .track.on{background:var(--green);color:#04210e}
-.pinbtn{flex:1.2;min-height:96px;border-radius:18px;background:var(--amber);color:var(--amberInk);font-weight:800;font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 0 0 0 rgba(255,176,32,.6)}
+.track.on::before{opacity:1;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.mapbtn{min-height:44px;padding:0 14px;border-radius:12px;background:rgba(20,22,26,.92);border:2px solid #4f9dff;color:#8dbdff;font-weight:700;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.mapbtn.on{background:#4f9dff;color:#061a33}
+/* Light out, split into a left and a right button */
+.pinbtn{flex:1;min-height:96px;border-radius:18px;background:var(--amber);color:var(--amberInk);font-weight:800;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 0 rgba(255,176,32,.6)}
 .pinbtn svg{width:30px;height:30px}
+.pinbtn small{font-size:12px;font-weight:700;letter-spacing:.06em;opacity:.75}
+.side{font-weight:600;color:var(--ink)}
 .pinbtn.flash{animation:flash .6s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,176,32,.7);transform:scale(.96)}100%{box-shadow:0 0 0 22px rgba(255,176,32,0);transform:scale(1)}}
 .sheet{height:55vh;display:flex;flex-direction:column;padding-bottom:0}
@@ -79,20 +91,20 @@ body.report #recenter{bottom:calc(55vh + 12px)}
 .check{display:flex!important;gap:10px;align-items:center;font-weight:500!important}
 .check input{width:22px;height:22px;accent-color:var(--green)}
 .hr{height:1px;background:var(--line);margin:20px 0 4px}
-#toast{position:fixed;left:50%;top:calc(var(--st) + 80px);transform:translateX(-50%);z-index:30;background:#f3f1ea;color:#14161a;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast{position:fixed;left:50%;top:calc(var(--st) + 128px);transform:translateX(-50%);z-index:30;background:#f3f1ea;color:#14161a;padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
 .me{width:20px;height:20px;border-radius:50%;background:#4f9dff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(79,157,255,.25)}
 .pin{position:relative;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--amber);border:2px solid #7a4d00;display:grid;place-items:center;margin-bottom:6px}
 .pin span{transform:rotate(45deg);font:800 13px/1 -apple-system,sans-serif;color:var(--amberInk)}
 .pin.done{background:#7b818b;border-color:#3d4148}.pin.done span{color:#fff}
 .pin.sel{outline:3px solid #fff}
-#mapMsg{position:fixed;left:16px;right:16px;top:calc(var(--st) + 90px);z-index:4;background:rgba(28,31,36,.96);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45}
+#mapMsg{position:fixed;left:16px;right:16px;top:calc(var(--st) + 128px);z-index:4;background:rgba(28,31,36,.96);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45}
 #mapMsg b{display:block;font-size:16px;margin-bottom:4px}
 #mapMsg code{font-size:13px;color:var(--amber);overflow-wrap:anywhere}
 /* No streetlight: a red stretch of road picked by tapping its start and end */
 .darkbtn{width:100%;margin-top:10px;min-height:52px;border-radius:14px;background:#2a1517;border:2px solid var(--red);color:#ffb4b4;font-weight:700;font-size:16px}
 #darkBtn2{color:#ffb4b4}
-#darkBar{position:fixed;left:12px;right:12px;top:calc(var(--st) + 74px);z-index:7;display:flex;gap:10px;align-items:center;background:#2a1517;border:1px solid var(--red);border-radius:14px;padding:10px 12px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+#darkBar{position:fixed;left:12px;right:12px;top:calc(var(--st) + 124px);z-index:7;display:flex;gap:10px;align-items:center;background:#2a1517;border:1px solid var(--red);border-radius:14px;padding:10px 12px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,.4)}
 #darkBar span{flex:1}
 #darkBar button{min-height:40px;padding:0 14px;border-radius:10px;background:#3a2226;color:#ffb4b4;font-weight:600}
 .dot{width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
@@ -143,12 +155,17 @@ body.pc #pcBar{display:flex;position:fixed;top:0;left:0;right:0;height:var(--bar
 .pcStats{display:flex;gap:20px;flex:1;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden}
 .pcStats b{color:var(--ink);font-size:16px;font-variant-numeric:tabular-nums;margin-right:5px}
 body.pc #pcGear{width:44px;height:44px;box-shadow:none}
-#mapBtn{min-width:132px;border:2px solid var(--green);color:var(--green)}
-#mapBtn.on{background:var(--green);color:#04210e}
+body.pc #mapBtn{min-width:120px;min-height:40px;box-shadow:none}
+body.pc .top2{display:none}
 /* frozen map: a clear layer over it blocks panning, zooming and taps */
 #freeze{display:none}
-body.pc.mapOn:not(.mapLive) #freeze{display:block;position:fixed;top:var(--bar);left:var(--side);right:0;bottom:0;z-index:3;cursor:not-allowed}
-#freeze span{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(20,22,26,.92);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:14px;color:var(--mute);white-space:nowrap}
+body.mapOn:not(.mapLive) #freeze{display:block;position:fixed;inset:0;z-index:3;cursor:not-allowed}
+body.pc.mapOn:not(.mapLive) #freeze{top:var(--bar);left:var(--side)}
+#freeze span{position:absolute;top:calc(var(--st) + 128px);left:50%;transform:translateX(-50%);background:rgba(20,22,26,.92);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:14px;color:var(--mute);white-space:nowrap}
+/* phone, before Start Map: a note where the map would be */
+#mapOff{display:none}
+body:not(.pc):not(.mapOn) #mapOff{display:block;position:fixed;left:24px;right:24px;top:calc(var(--st) + 140px);z-index:2;text-align:center;color:var(--mute);font-size:15px}
+#mapOff b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px}
 body.pc #reportPanel{top:var(--bar);left:0;right:auto;width:var(--side);height:auto;border-radius:0;border-top:0;border-right:1px solid var(--line);box-shadow:none;padding:14px 16px 0}
 body.pc #map{top:var(--bar);left:var(--side);width:calc(100% - var(--side));height:calc(100% - var(--bar))}
 body.pc:not(.mapOn) #map,body.pc:not(.mapOn) #mapMsg{display:none!important}
@@ -156,6 +173,7 @@ body.pc:not(.mapOn) #map,body.pc:not(.mapOn) #mapMsg{display:none!important}
 body.pc:not(.mapLive) #placeBtn,body.pc:not(.mapLive) #darkBtn2,body.pc:not(.mapLive) #turnBtn2,body.pc:not(.mapLive) #darkBar{display:none!important}
 body.pc #darkBar{left:calc(var(--side) + 14px);right:20px;top:calc(var(--bar) + 70px);max-width:640px}
 body.pc.mapOn:not(.mapLive) #freeze span{top:auto;bottom:16px}
+body.pc #toast{top:calc(var(--bar) + 16px)}
 body.pc #mapMsg{left:calc(var(--side) + 20px);right:20px;top:calc(var(--bar) + 20px);max-width:640px}
 body.pc:not(.mapOn) #pcHome{display:grid}
 #pcHome{position:fixed;top:var(--bar);left:var(--side);right:0;bottom:0;place-items:center;padding:32px;overflow-y:auto}
@@ -190,7 +208,7 @@ body.pc .chip:hover{color:var(--ink)}
 <header id="pcBar">
   <h1>Streetlight Tracker</h1>
   <div class="pcStats"><span><b id="pcMiles">0.0</b>miles covered</span><span><b id="pcOpen">0</b>open</span><span><b id="pcDone">0</b>reported</span><span><b id="pcDark">0</b>dark streets</span></div>
-  <button id="mapBtn" class="small" title="Update Map uses your Google Maps API. Stop Update freezes the map as it is.">Update Map</button>
+  <button id="mapBtn" class="mapbtn" title="Start Map uses your Google Maps API. Stop Map freezes the map as it is.">Start Map</button>
   <button id="pcPhone" class="small">iPhone view</button>
   <button id="pcImport" class="small">Import backup</button>
   <button id="pcGear" class="icon" aria-label="Settings"></button>
@@ -199,7 +217,7 @@ body.pc .chip:hover{color:var(--ink)}
 <main id="pcHome">
   <div class="home">
     <h2>Map is off</h2>
-    <p>Nothing loads from Google while the map is off, so no API usage is counted. Press <b>Update Map</b> at the top to see your driven roads and pins. Press <b>Stop Update</b> to freeze the map as a snapshot.</p>
+    <p>Nothing loads from Google while the map is off, so no API usage is counted. Press <b>Start Map</b> at the top to see your driven roads and pins. Press <b>Stop Map</b> to freeze the map as a snapshot.</p>
     <div id="drop" class="drop">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
       <b>Import your iPhone backup</b>
@@ -215,6 +233,12 @@ body.pc .chip:hover{color:var(--ink)}
   </div>
 </main>
 
+<div class="top2">
+  <button id="trackBtn" class="track">Start tracking</button>
+  <button id="phoneMapBtn" class="mapbtn">Start Map</button>
+</div>
+<div id="mapOff"><b>Map is off</b>Tap Start Map to load it. Start tracking also starts the map. Light out pins still work with the map off.</div>
+
 <button id="recenter" class="icon" aria-label="Follow my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 
 <section id="drivePanel" class="panel">
@@ -224,8 +248,8 @@ body.pc .chip:hover{color:var(--ink)}
     <div><b id="gps">...</b><span>GPS</span></div>
   </div>
   <div class="driveRow">
-    <button id="trackBtn" class="track">Start tracking</button>
-    <button id="pinBtn" class="pinbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out</button>
+    <button id="pinL" class="pinbtn" data-side="L"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>LEFT<small>LIGHT OUT</small></button>
+    <button id="pinR" class="pinbtn" data-side="R"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>RIGHT<small>LIGHT OUT</small></button>
   </div>
   <div class="darkRow">
     <button id="darkBtn" class="darkbtn">No streetlight on a street</button>
@@ -280,7 +304,7 @@ body.pc .chip:hover{color:var(--ink)}
   </div>
 </div>
 
-<div id="freeze"><span>Snapshot. Press Update Map to move the map.</span></div>
+<div id="freeze"><span>Snapshot. Start Map to move the map.</span></div>
 <div id="mapTools">
   <button id="toolPin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path d="M4 4l16 16"/></svg>Light out pin</button>
   <button id="toolDark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="2" fill="currentColor"/><circle cx="20" cy="5" r="2" fill="currentColor"/></svg>No streetlight</button>
@@ -385,7 +409,10 @@ let scriptStarted = false, wantMap = false;
 // and if you pinch or drag the map while driving it goes back to following you after a few seconds.
 const LSDZ = 'slt.driveZoom', RESUME_MS = 8000;
 let driveZoom = Math.min(21, Math.max(12, +store.get(LSDZ) || 17)), resumeT = null;
-let live = !isPC; // PC only: true = map updating (Update Map), false = frozen snapshot or not loaded
+// Map starts off on every device. Start Map loads it (live); Stop Map freezes it as a snapshot.
+// Tracking needs the map, so Start tracking also starts it and Stop Map is refused while tracking.
+let live = false;
+let lastHd = null, hdFrom = null; // last direction of travel {deg, t}, and the fix it is measured from
 const canEdit = () => !!map && live;
 let filter = 'open', selId = null, wake = null;
 let key = store.get(LSK) || '';
@@ -401,9 +428,15 @@ const MIN_MOVE = 6, MAX_ACC = 35, GAP_M = 250, GAP_S = 45;
 function onPos(p){
   const c = p.coords, fix = {lat: c.latitude, lng: c.longitude, acc: c.accuracy, t: p.timestamp || Date.now()};
   last = fix; if (fix.acc <= 50) lastGood = fix;
+  // direction of travel: the iPhone's own heading while moving, otherwise the bearing over the last 12+ m
+  if (Number.isFinite(c.heading) && c.heading >= 0 && (c.speed == null || c.speed > 1)) lastHd = {deg: c.heading, t: fix.t};
+  else if (fix.acc <= 30){
+    if (!hdFrom) hdFrom = fix;
+    else if (dist(hdFrom, fix) >= 12){ lastHd = {deg: bearing(hdFrom, fix), t: fix.t}; hdFrom = fix; }
+  }
   $('gps').textContent = '±' + Math.round(fix.acc) + ' m';
   drawMe(fix);
-  if (map && follow && (mode === 'drive' || firstFix)){
+  if (map && live && follow && (mode === 'drive' || firstFix)){
     if (firstFix){ map.setCenter(fix); map.setZoom(driveZoom); } else map.panTo(fix);
   }
   firstFix = false;
@@ -443,7 +476,21 @@ function nearDark(f){
 }
 function followMe(){ // center on my location and keep following it
   clearTimeout(resumeT); follow = true; $('recenter').classList.remove('show');
-  if (last && map) map.panTo(last);
+  if (last && map && live) map.panTo(last);
+}
+function bearing(a, b){ // degrees clockwise from north, a -> b
+  const y = Math.sin(toRad(b.lng - a.lng)) * Math.cos(toRad(b.lat));
+  const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) - Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lng - a.lng));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+const COMPASS = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+const compass = deg => COMPASS[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+// "left side · west side, heading north"; the compass side needs the heading saved with the pin
+function sideText(p){
+  if (!p.side) return 'Side not set';
+  const lr = p.side === 'L' ? 'Left side' : 'Right side';
+  if (p.hd == null) return lr + ' · direction unknown';
+  return lr + ' · ' + compass(p.hd + (p.side === 'L' ? -90 : 90)) + ' side, heading ' + compass(p.hd);
 }
 function scheduleResume(){ // driving: after the map is left alone for a few seconds, follow me again
   clearTimeout(resumeT);
@@ -465,6 +512,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') save(true);
 });
 function setTracking(on){
+  if (on && !live) setLive(true); // tracking starts the map
   tracking = on; store.set(LSTRK, on ? '1' : '0');
   const b = $('trackBtn'); b.classList.toggle('on', on); b.textContent = on ? 'Stop tracking' : 'Start tracking';
   if (on){ lastKept = null; curSeg = null; requestWake(); toast('Tracking. Keep this screen open while driving.'); }
@@ -627,7 +675,12 @@ async function routePath(a, b){
 const tapWord = () => isPC ? 'Click' : 'Tap';
 function darkBar(txt, cls){ $('darkTxt').textContent = txt || ''; $('darkBar').hidden = !txt; $('darkBar').classList.toggle('turn', cls === 'turn'); }
 function stopFollow(){ follow = false; $('recenter').classList.add('show'); }
-function noMap(){ if (canEdit()) return false; toast(isPC ? 'Press Update Map first' : 'Wait for the map to load'); return true; }
+function noMap(){ // map tools need a live map; a frozen one is unfrozen (same map, no new load)
+  if (map && !live) setLive(true);
+  if (canEdit()) return false;
+  toast(scriptStarted ? 'Wait for the map to load' : (isPC ? 'Press' : 'Tap') + ' Start Map first');
+  return true;
+}
 function dotAt(ll){ const dot = document.createElement('div'); dot.className = 'dot'; return new google.maps.marker.AdvancedMarkerElement({map, position: ll, content: dot, zIndex: 20}); }
 function startDark(){
   if (noMap()) return;
@@ -749,13 +802,14 @@ $('darkBtn2').addEventListener('click', startDark);
 $('darkCancel').addEventListener('click', endDark);
 
 // ---------- pins ----------
-function addPin(lat, lng){
-  const p = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: data.nextN++, lat: r6(lat), lng: r6(lng), t: Date.now(), addr: '', note: '', done: false};
+function addPin(lat, lng, side, hd){
+  const p = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: data.nextN++, lat: r6(lat), lng: r6(lng), t: Date.now(), addr: '', note: '', done: false,
+    side: side || null, hd: hd == null ? null : Math.round(hd)};
   data.pins.push(p); save(true); drawPin(p); updateStats(); renderList(); geocode(p);
   return p;
 }
 function geocode(p){
-  if (!geocoder){ p.addrErr = true; renderList(); return; }
+  if (!geocoder) return; // looked up when the map starts
   p.addr = ''; p.addrErr = false; renderList();
   geocoder.geocode({location: {lat: p.lat, lng: p.lng}}).then(({results}) => {
     const pick = t => results.find(r => r.types.includes(t));
@@ -781,12 +835,14 @@ function renderList(){
   $('list').innerHTML = ps.map(p => {
     const addr = p.addr ? '<div class="addr" data-a="go">Near ' + esc(p.addr) + '</div>'
       : p.addrErr ? '<div class="addr pending" data-a="go">Address lookup failed. <button data-a="retry" style="color:var(--amber);font-weight:600">Retry</button></div>'
-      : '<div class="addr pending" data-a="go">' + (isPC && !geocoder ? 'No address yet. Press Update Map to look it up.' : 'Looking up address...') + '</div>';
+      : '<div class="addr pending" data-a="go">' + (!geocoder ? 'No address yet. Start Map to look it up.' : 'Looking up address...') + '</div>';
     return '<li class="item' + (p.done ? ' done' : '') + (p.id === selId ? ' hl' : '') + '" data-id="' + esc(p.id) + '">' +
       '<div class="num">' + esc(p.n) + '</div><div>' + addr +
+      '<div class="meta"><span class="side">' + esc(sideText(p)) + '</span></div>' +
       '<div class="meta">' + esc(fmtT(p.t)) + ' · ' + esc(p.lat.toFixed(5)) + ', ' + esc(p.lng.toFixed(5)) + (p.done ? ' · Reported' : '') + '</div>' +
       '<input class="note" placeholder="Note or pole number" value="' + esc(p.note) + '">' +
       '<div class="acts"><a class="btn gm" href="' + esc(gmUrl(p)) + '" target="_blank" rel="noopener">Open in Google Maps</a>' +
+      '<button data-a="side">' + (p.side === 'L' ? 'Change to right' : p.side === 'R' ? 'Change to left' : 'Set side') + '</button>' +
       '<button data-a="copy">Copy</button><button data-a="done">' + (p.done ? 'Reopen' : 'Mark reported') + '</button>' +
       '<button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
@@ -807,7 +863,11 @@ function renderDark(){
       '<button data-a="copy">Copy</button><button data-a="del" class="del">Delete</button></div></div></li>';
   }).join('');
 }
-function pinText(p){ return '#' + p.n + ': ' + (p.addr ? 'Near ' + p.addr : p.lat + ', ' + p.lng) + (p.note ? '\nNote: ' + p.note : '') + '\n' + gmUrl(p); }
+function pinText(p){ return '#' + p.n + ': ' + (p.addr ? 'Near ' + p.addr : p.lat + ', ' + p.lng) + (p.side ? '\n' + sideText(p) : '') + (p.note ? '\nNote: ' + p.note : '') + '\n' + gmUrl(p); }
+function setSide(p, side){
+  p.side = side; save(true); renderList();
+  toast('#' + p.n + ': ' + sideText(p));
+}
 async function copyText(txt){
   try { await navigator.clipboard.writeText(txt); toast('Copied'); return; } catch(e){}
   const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -844,6 +904,11 @@ $('list').addEventListener('click', e => {
   if (act === 'retry'){ e.stopPropagation(); geocode(p); }
   else if (act === 'go') select(p.id, true);
   else if (act === 'copy') copyText(pinText(p));
+  else if (act === 'side'){ // two taps to change a side, so a slip of the finger doesn't flip it
+    if (p.side) armed(a, a.textContent, () => setSide(p, p.side === 'L' ? 'R' : 'L'));
+    else showMenu('Light #' + p.n + ': which side?', 'Left or right of the road, as you were driving', [
+      {label: 'Left side', fn: () => setSide(p, 'L')}, {label: 'Right side', fn: () => setSide(p, 'R')}]);
+  }
   else if (act === 'done'){ p.done = !p.done; save(true); drawPin(p); renderList(); toast(p.done ? 'Marked #' + p.n + ' reported' : 'Reopened #' + p.n); }
   else if (act === 'del') armed(a, 'Delete', () => {
     const n = p.n, later = data.pins.some(x => x.n > n);
@@ -861,13 +926,14 @@ $('list').addEventListener('input', e => {
 $('list').addEventListener('focusout', e => { if (e.target.classList.contains('note')){ save(true); setTimeout(() => { if (renderPending) renderList(); }, 0); } });
 
 // ---------- controls ----------
-$('pinBtn').addEventListener('click', () => {
+['pinL', 'pinR'].forEach(id => $(id).addEventListener('click', () => {
   if (!last){ toast('Waiting for GPS...'); return; }
   const at = lastGood && (last.t - lastGood.t) < 15000 ? lastGood : last;
-  const b = $('pinBtn'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
-  const p = addPin(at.lat, at.lng);
-  toast('Pinned light #' + p.n + (at.acc > 50 ? ' (weak GPS, check it later)' : ''));
-});
+  const b = $(id); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+  const hd = lastHd && (Date.now() - lastHd.t) < 30000 ? lastHd.deg : null; // direction you were driving
+  const p = addPin(at.lat, at.lng, b.dataset.side, hd);
+  toast('#' + p.n + ' ' + sideText(p).toLowerCase() + (at.acc > 50 ? ' (weak GPS, check it later)' : ''), 3500);
+}));
 $('trackBtn').addEventListener('click', () => setTracking(!tracking));
 $('recenter').addEventListener('click', () => {
   followMe();
@@ -890,7 +956,7 @@ $('copyAll').addEventListener('click', () => {
 });
 const fitPad = () => isPC ? 60 : {top: 90, left: 40, right: 40, bottom: Math.round(window.innerHeight * .55) + 20};
 function fitView(){ // frame the pins and dark streets (on PC also the driven roads)
-  if (!map) return;
+  if (!canEdit()) return; // a frozen map stays where it is
   const pts = data.pins.map(p => ({lat: p.lat, lng: p.lng}));
   data.dark.forEach(d => d.path.forEach(a => pts.push(P(a))));
   data.turns.forEach(t => pts.push({lat: t.lat, lng: t.lng}));
@@ -913,7 +979,7 @@ function setMode(m){
     renderList();
     if (!selId) fitView();
   } else { // back to driving: your driving zoom, centered on you
-    if (map) map.setZoom(driveZoom);
+    if (map && live) map.setZoom(driveZoom);
     followMe();
   }
 }
@@ -946,7 +1012,7 @@ $('settings').addEventListener('click', e => { if (e.target.id === 'settings') $
 $('saveKey').addEventListener('click', () => {
   const k = keyDraft.trim(); if (!k){ toast('Paste a key first'); return; }
   store.set(LSK, k); save(true);
-  if (isPC && !scriptStarted){ // map not loaded yet, so no reload needed
+  if (!scriptStarted){ // map not loaded yet, so no reload needed
     key = k; $('settings').hidden = true; toast('Key saved');
     if (wantMap) setLive(true);
     return;
@@ -969,11 +1035,11 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 $('expJson').addEventListener('click', () => download('streetlights-backup-' + stamp() + '.json', JSON.stringify(Object.assign({app: 'streetlight-tracker', v: 1, exported: new Date().toISOString()}, data)), 'application/json'));
 $('expCsv').addEventListener('click', () => {
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-  const rows = [['Number', 'Status', 'Address', 'Latitude', 'Longitude', 'Pinned', 'Note', 'Google Maps']].concat(
-    data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]),
+  const rows = [['Number', 'Status', 'Address', 'Side of road', 'Latitude', 'Longitude', 'Pinned', 'Note', 'Google Maps']].concat(
+    data.pins.slice().sort((a, b) => a.n - b.n).map(p => [p.n, p.done ? 'Reported' : 'Open', p.addr, p.side ? sideText(p) : '', p.lat, p.lng, new Date(p.t).toLocaleString(), p.note, gmUrl(p)]),
     data.dark.map(d => { const s = d.path[0], e = d.path[d.path.length - 1];
-      return ['S' + darkNum(d), 'No streetlights (street)', d.name, s[0], s[1], new Date(d.t).toLocaleString(), 'Ends at ' + e[0] + ', ' + e[1] + ' · ' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', gmUrl(P(s))]; }),
-    data.turns.map((t, i) => ['T' + (i + 1), 'Turnaround', '', t.lat, t.lng, new Date(t.t).toLocaleString(), '', gmUrl(t)]));
+      return ['S' + darkNum(d), 'No streetlights (street)', d.name, '', s[0], s[1], new Date(d.t).toLocaleString(), 'Ends at ' + e[0] + ', ' + e[1] + ' · ' + (segLen(d.path) / 1609.344).toFixed(2) + ' mi', gmUrl(P(s))]; }),
+    data.turns.map((t, i) => ['T' + (i + 1), 'Turnaround', '', '', t.lat, t.lng, new Date(t.t).toLocaleString(), '', gmUrl(t)]));
   download('streetlights-' + stamp() + '.csv', rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv');
 });
 $('impBtn').addEventListener('click', () => $('impFile').click());
@@ -1075,7 +1141,7 @@ function setupMap(){
   data.pins.filter(p => !p.addr).forEach(geocode);
   data.dark.filter(d => !d.name).forEach(nameDark);
   if (mode === 'report') setMode('report');
-  if (isPC) applyLive(); // Stop Update may have been pressed while the map was loading
+  applyLive(); // Stop Map may have been pressed while the map was loading
 }
 function loadMaps(){
   if (scriptStarted) return; scriptStarted = true;
@@ -1095,23 +1161,24 @@ function loadMaps(){
 }
 
 // ---------- PC ----------
-// Nothing loads from Google until Update Map is pressed. Stop Update freezes the map where it is:
+// Nothing loads from Google until Start Map is pressed. Stop Map freezes the map where it is:
 // it stays on screen but can't be moved or edited, so no new map images or lookups are requested.
-// Update Map again unfreezes the same map, which Google does not bill as a new map load.
+// Start Map again unfreezes the same map, which Google does not bill as a new map load.
 function applyLive(){
   document.body.classList.toggle('mapLive', live);
-  $('mapBtn').textContent = live ? 'Stop Update' : 'Update Map';
-  $('mapBtn').classList.toggle('on', live);
+  document.querySelectorAll('.mapbtn').forEach(b => { b.textContent = live ? 'Stop Map' : 'Start Map'; b.classList.toggle('on', live); });
   if (map) map.setOptions({gestureHandling: live ? 'greedy' : 'none', keyboardShortcuts: live});
   renderList(); // Move start/end buttons only show while live
 }
 function setLive(on){
   if (on && !key){ wantMap = true; openSettings(true); return; }
+  if (!on && tracking){ toast('Stop tracking first. The map stays on while tracking.'); return; }
   live = on;
   if (!on){ endDark(); closeMenu(); if (placing){ placing = false; $('placeBtn').textContent = 'Add on map'; } }
-  if (on){ document.body.classList.add('mapOn'); if (!scriptStarted){ mapMsg('Loading Google Maps...', ''); loadMaps(); } }
+  if (on){ document.body.classList.add('mapOn'); if (!scriptStarted){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else if (mode === 'drive') followMe(); }
   applyLive();
 }
+$('phoneMapBtn').addEventListener('click', () => setLive(!live));
 // iPhone view: the phone layout in a 440 x 956 frame (iPhone Pro Max size), scaled down to fit the window
 function sizeSim(){ $('phoneSim').style.setProperty('--s', Math.min(1, (innerHeight - 40) / 980, (innerWidth - 340) / 464).toFixed(3)); }
 function openSim(){
@@ -1131,7 +1198,7 @@ if (isPC){
   // Map toolbar. Using a tool on a frozen map unfreezes it first (same map, no new map load).
   const tool = fn => () => {
     if (!map){ toast('Wait for the map to load'); return; }
-    if (!live){ setLive(true); toast('Map updating again', 1500); }
+    if (!live){ setLive(true); toast('Map started again', 1500); }
     fn();
   };
   $('toolPin').addEventListener('click', tool(() => {
@@ -1163,8 +1230,7 @@ if (isPC){
 setMode(mode);
 updateStats();
 renderList();
-if (!isPC){
-  if (key){ mapMsg('Loading Google Maps...', ''); loadMaps(); } else openSettings(true);
+if (!isPC){ // the map stays off until Start Map (or Start tracking); GPS and pins work without it
   startWatch();
   if (store.get(LSTRK) === '1') setTracking(true);
 }
